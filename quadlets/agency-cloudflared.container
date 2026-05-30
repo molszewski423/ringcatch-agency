@@ -1,0 +1,27 @@
+[Unit]
+Description=Cloudflare Tunnel — exposes ringcatch.io publicly
+After=agency-landing.service
+Requires=agency-pod-pod.service
+
+[Container]
+Image=docker.io/cloudflare/cloudflared:latest
+ContainerName=agency-cloudflared
+Pod=agency-pod.pod
+
+EnvironmentFile=%h/agency/.env
+# cloudflared reads TUNNEL_TOKEN automatically when running `tunnel run`
+Environment=TUNNEL_TOKEN=%E{CLOUDFLARE_TUNNEL_TOKEN}
+
+# Tunnel config lives in Cloudflare Zero Trust dashboard, not here.
+# Public hostnames to configure there:
+#   ringcatch.io        → http://localhost:8090  (landing page)
+#   book.ringcatch.io   → http://localhost:3000  (Cal.com, optional)
+#   stripe.ringcatch.io → http://localhost:8082  (Stripe webhooks, optional)
+Exec=tunnel --no-autoupdate run
+
+[Service]
+Restart=on-failure
+TimeoutStartSec=60
+
+# [Install] removed — superseded by agency-tunnel.container
+# agency-tunnel uses CLOUDFLARE_API_TOKEN + tunnel-setup.sh for automated provisioning

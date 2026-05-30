@@ -1,0 +1,27 @@
+[Unit]
+Description=Agency PostgreSQL (Cal.com backend)
+After=agency-pod-pod.service
+Requires=agency-pod-pod.service
+
+[Container]
+Image=docker.io/postgres:16-alpine
+ContainerName=agency-postgres
+Pod=agency-pod.pod
+
+Volume=agency-postgres-data:/var/lib/postgresql/data:Z
+EnvironmentFile=%h/agency/.env
+Environment=POSTGRES_USER=%E{POSTGRES_USER}
+Environment=POSTGRES_PASSWORD=%E{POSTGRES_PASSWORD}
+Environment=POSTGRES_DB=%E{POSTGRES_DB}
+
+HealthCmd=pg_isready -U agency
+HealthInterval=10s
+HealthTimeout=5s
+HealthRetries=5
+
+[Service]
+Restart=on-failure
+TimeoutStartSec=120
+
+[Install]
+WantedBy=default.target

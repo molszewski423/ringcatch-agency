@@ -1,0 +1,225 @@
+{
+  "version": "0.1",
+  "name": "Arctic Air HVAC Chatbot",
+  "niche": "HVAC",
+  "generated_at": "2026-05-16T14:02:51.796256",
+  "flows": [
+    {
+      "name": "main",
+      "startNode": "entry",
+      "nodes": [
+        {
+          "name": "entry",
+          "type": "standard",
+          "onEnter": [],
+          "onReceive": [
+            {
+              "type": "say",
+              "message": "Hi! I'm the virtual assistant for Arctic Air HVAC. How can I help you today?"
+            }
+          ],
+          "next": [
+            {
+              "condition": "true",
+              "node": "faq_router"
+            }
+          ]
+        },
+        {
+          "name": "faq_router",
+          "type": "standard",
+          "onEnter": [],
+          "onReceive": [],
+          "next": [
+            {
+              "condition": "true",
+              "node": "fallback"
+            }
+          ]
+        },
+        {
+          "name": "fallback",
+          "type": "standard",
+          "onEnter": [],
+          "onReceive": [
+            {
+              "type": "say",
+              "message": "Let me get a team member for you. Call us at 704-555-0182 or leave your name and we'll call you right back."
+            }
+          ],
+          "next": []
+        },
+        {
+          "name": "faq_0",
+          "type": "standard",
+          "onEnter": [],
+          "onReceive": [
+            {
+              "type": "say",
+              "message": "Yes \u2014 Arctic Air provides round-the-clock emergency HVAC service in Charlotte."
+            }
+          ],
+          "next": [
+            {
+              "condition": "true",
+              "node": "faq_router"
+            }
+          ]
+        },
+        {
+          "name": "faq_1",
+          "type": "standard",
+          "onEnter": [],
+          "onReceive": [
+            {
+              "type": "say",
+              "message": "We serve Charlotte and surrounding areas within 30 miles."
+            }
+          ],
+          "next": [
+            {
+              "condition": "true",
+              "node": "faq_router"
+            }
+          ]
+        },
+        {
+          "name": "faq_2",
+          "type": "standard",
+          "onEnter": [],
+          "onReceive": [
+            {
+              "type": "say",
+              "message": "We aim to have a technician on-site within 2-4 hours for emergencies."
+            }
+          ],
+          "next": [
+            {
+              "condition": "true",
+              "node": "faq_router"
+            }
+          ]
+        },
+        {
+          "name": "faq_3",
+          "type": "standard",
+          "onEnter": [],
+          "onReceive": [
+            {
+              "type": "say",
+              "message": "Yes, our certified techs service all major brands and models."
+            }
+          ],
+          "next": [
+            {
+              "condition": "true",
+              "node": "faq_router"
+            }
+          ]
+        },
+        {
+          "name": "faq_4",
+          "type": "standard",
+          "onEnter": [],
+          "onReceive": [
+            {
+              "type": "say",
+              "message": "Yes \u2014 seasonal tune-up plans starting at $99/visit."
+            }
+          ],
+          "next": [
+            {
+              "condition": "true",
+              "node": "faq_router"
+            }
+          ]
+        },
+        {
+          "name": "faq_5",
+          "type": "standard",
+          "onEnter": [],
+          "onReceive": [
+            {
+              "type": "say",
+              "message": "All technicians are fully licensed, insured, and background-checked."
+            }
+          ],
+          "next": [
+            {
+              "condition": "true",
+              "node": "faq_router"
+            }
+          ]
+        },
+        {
+          "name": "faq_6",
+          "type": "standard",
+          "onEnter": [],
+          "onReceive": [
+            {
+              "type": "say",
+              "message": "Absolutely \u2014 chat with us here or call 704-555-0182 for a free estimate."
+            }
+          ],
+          "next": [
+            {
+              "condition": "true",
+              "node": "faq_router"
+            }
+          ]
+        },
+        {
+          "name": "faq_7",
+          "type": "standard",
+          "onEnter": [],
+          "onReceive": [
+            {
+              "type": "say",
+              "message": "All major credit cards, check, and financing options available."
+            }
+          ],
+          "next": [
+            {
+              "condition": "true",
+              "node": "faq_router"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "faq_pairs": [
+    {
+      "q": "Do you offer 24/7 emergency service?",
+      "a": "Yes \u2014 Arctic Air provides round-the-clock emergency HVAC service in Charlotte."
+    },
+    {
+      "q": "What areas do you serve?",
+      "a": "We serve Charlotte and surrounding areas within 30 miles."
+    },
+    {
+      "q": "How quickly can you respond to an emergency call?",
+      "a": "We aim to have a technician on-site within 2-4 hours for emergencies."
+    },
+    {
+      "q": "Do you service all HVAC brands?",
+      "a": "Yes, our certified techs service all major brands and models."
+    },
+    {
+      "q": "Do you offer maintenance plans?",
+      "a": "Yes \u2014 seasonal tune-up plans starting at $99/visit."
+    },
+    {
+      "q": "Are your technicians licensed?",
+      "a": "All technicians are fully licensed, insured, and background-checked."
+    },
+    {
+      "q": "Can I get a free estimate?",
+      "a": "Absolutely \u2014 chat with us here or call 704-555-0182 for a free estimate."
+    },
+    {
+      "q": "What payment methods do you accept?",
+      "a": "All major credit cards, check, and financing options available."
+    }
+  ]
+}

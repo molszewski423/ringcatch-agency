@@ -1,0 +1,19 @@
+[Unit]
+Description=Agency delivery engine (Botpress export + PDF)
+After=agency-pod-pod.service
+Requires=agency-pod-pod.service
+
+[Container]
+Image=localhost/agency-delivery:latest
+ContainerName=agency-delivery
+Pod=agency-pod.pod
+
+Volume=agency-data:/data:Z
+EnvironmentFile=%h/agency/.env
+
+[Service]
+Restart=on-failure
+TimeoutStartSec=120
+
+[Install]
+WantedBy=default.target

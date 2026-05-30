@@ -1,0 +1,1009 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>RingCatch.io.io — #1 AI Chatbot for US Trade & Service Businesses</title>
+  <meta name="description" content="Commercial-grade AI chatbots for US-based small businesses. RingCatch.io.io captures leads, answers questions, and books appointments 24/7. Trusted across America." />
+  <style>
+    :root {
+      --bg:       #0b0b14;
+      --bg-card:  #111122;
+      --bg-pain:  #0d1520;
+      --border:   #1c1c30;
+      --accent:   #22d3ee;
+      --accent-d: #0891b2;
+      --text:     #e2e8f0;
+      --muted:    #64748b;
+      --green:    #4ade80;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      line-height: 1.65;
+    }
+
+    .wrap    { max-width: 900px; margin: 0 auto; padding: 0 24px; }
+    .divider { border: none; border-top: 1px solid var(--border); }
+    .muted   { color: var(--muted); }
+    .accent  { color: var(--accent); }
+
+    /* ── Nav ── */
+    nav {
+      padding: 0;
+      border-bottom: 1px solid var(--border);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: rgba(11,11,20,0.92);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      transition: box-shadow 0.2s;
+    }
+    nav.scrolled { box-shadow: 0 4px 32px rgba(0,0,0,0.4); }
+    nav .wrap { display: flex; align-items: center; justify-content: space-between; padding-top: 16px; padding-bottom: 16px; }
+    .logo { font-size: 1.2rem; font-weight: 900; letter-spacing: -0.5px; text-decoration: none; color: var(--text); }
+    .logo .catch { color: var(--accent); }
+    .nav-right { display: flex; align-items: center; gap: 20px; }
+    .nav-link { font-size: 0.83rem; color: var(--muted); text-decoration: none; transition: color 0.15s; }
+    .nav-link:hover { color: var(--accent); }
+    .nav-cta {
+      background: var(--accent);
+      color: #0b0b14;
+      font-weight: 800;
+      font-size: 0.83rem;
+      padding: 8px 20px;
+      border-radius: 6px;
+      text-decoration: none;
+      transition: background 0.15s, transform 0.1s;
+      letter-spacing: 0.2px;
+      white-space: nowrap;
+    }
+    .nav-cta:hover { background: var(--accent-d); color: #fff; transform: translateY(-1px); }
+    @media (max-width: 500px) { .nav-link:not(.nav-link-contact) { display: none; } }
+
+    /* ── Hero ── */
+    .hero { padding: 88px 0 80px; text-align: center; }
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(34,211,238,0.08);
+      border: 1px solid rgba(34,211,238,0.3);
+      color: var(--accent);
+      font-size: 0.75rem;
+      font-weight: 700;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      padding: 6px 16px;
+      border-radius: 20px;
+      margin-bottom: 28px;
+    }
+    .hero-badge::before { content: "●"; font-size: 0.5rem; animation: blink 2s infinite; }
+    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.3} }
+    .hero-mark {
+      font-size: clamp(2.8rem, 8vw, 4.5rem);
+      font-weight: 900;
+      letter-spacing: -2px;
+      line-height: 1;
+      margin-bottom: 20px;
+    }
+    .hero-mark .catch { color: var(--accent); }
+    .hero-tag {
+      font-size: clamp(1rem, 2.5vw, 1.2rem);
+      color: var(--muted);
+      font-style: italic;
+      margin-bottom: 20px;
+    }
+    .hero-sub {
+      font-size: 1.05rem;
+      color: var(--muted);
+      max-width: 560px;
+      margin: 0 auto 44px;
+    }
+    .hero-stats {
+      display: flex;
+      justify-content: center;
+      gap: 40px;
+      flex-wrap: wrap;
+      margin-top: 52px;
+      padding-top: 40px;
+      border-top: 1px solid var(--border);
+    }
+    .hero-stat-val { font-size: 1.8rem; font-weight: 900; color: var(--accent); }
+    .hero-stat-label { font-size: 0.78rem; color: var(--muted); margin-top: 4px; }
+
+    /* ── Buttons ── */
+    .btn {
+      display: inline-block;
+      background: var(--accent);
+      color: #0b0b14;
+      font-weight: 800;
+      font-size: 1rem;
+      padding: 15px 36px;
+      border-radius: 6px;
+      text-decoration: none;
+      transition: background 0.15s, transform 0.1s;
+      letter-spacing: 0.2px;
+    }
+    .btn:hover { background: var(--accent-d); color: #fff; transform: translateY(-2px); }
+    .btn-ghost {
+      background: transparent;
+      border: 2px solid var(--accent);
+      color: var(--accent);
+      padding: 13px 34px;
+    }
+    .btn-ghost:hover { background: var(--accent); color: #0b0b14; }
+    .btn-block { display: block; text-align: center; }
+    .hero-ctas { display: flex; gap: 16px; justify-content: center; flex-wrap: wrap; }
+
+    /* ── Pain ── */
+    .pain-wrap { padding: 64px 0; }
+    .pain-box {
+      background: var(--bg-pain);
+      border-left: 4px solid var(--accent);
+      border-radius: 0 10px 10px 0;
+      padding: 32px 36px;
+    }
+    .pain-headline {
+      font-size: clamp(1.15rem, 3vw, 1.55rem);
+      font-weight: 700;
+      line-height: 1.4;
+      margin-bottom: 12px;
+    }
+    .pain-headline em { color: var(--accent); font-style: normal; }
+    .pain-body { font-size: 0.95rem; color: var(--muted); line-height: 1.6; }
+
+    /* ── Section common ── */
+    .eyebrow {
+      text-transform: uppercase;
+      letter-spacing: 2.5px;
+      font-size: 0.72rem;
+      color: var(--accent);
+      font-weight: 700;
+      margin-bottom: 10px;
+    }
+    .section-h {
+      font-size: clamp(1.5rem, 4vw, 2.1rem);
+      font-weight: 800;
+      line-height: 1.25;
+      margin-bottom: 48px;
+    }
+
+    /* ── What it does ── */
+    .what { padding: 72px 0; }
+    .what-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 24px;
+      margin-top: 48px;
+    }
+    .what-item {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 28px 24px;
+      transition: border-color 0.15s;
+    }
+    .what-item:hover { border-color: var(--accent); }
+    .what-icon { font-size: 2rem; margin-bottom: 14px; }
+    .what-title { font-weight: 700; font-size: 1rem; margin-bottom: 8px; }
+    .what-desc { font-size: 0.88rem; color: var(--muted); line-height: 1.6; }
+
+    /* ── How it works ── */
+    .how { padding: 72px 0; text-align: center; }
+    .steps {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 32px;
+      margin-top: 48px;
+      position: relative;
+    }
+    .step { text-align: center; }
+    .step-num {
+      width: 52px;
+      height: 52px;
+      background: transparent;
+      border: 2px solid var(--accent);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.3rem;
+      font-weight: 900;
+      color: var(--accent);
+      margin: 0 auto 16px;
+    }
+    .step-title { font-weight: 700; font-size: 1rem; margin-bottom: 8px; }
+    .step-desc { font-size: 0.88rem; color: var(--muted); line-height: 1.55; }
+
+    /* ── Industries / use cases ── */
+    .use-cases { padding: 72px 0; }
+    .tag-cloud {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 32px;
+    }
+    .tag {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 7px 16px;
+      font-size: 0.88rem;
+      color: var(--muted);
+    }
+
+    /* ── Benefits ── */
+    .benefits { padding: 72px 0; text-align: center; }
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+      gap: 20px;
+    }
+    .card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 28px 24px;
+      text-align: left;
+      transition: border-color 0.15s;
+    }
+    .card:hover { border-color: var(--accent); }
+    .card-icon { font-size: 1.8rem; margin-bottom: 14px; }
+    .card-title { font-weight: 700; font-size: 1rem; margin-bottom: 8px; }
+    .card-desc  { font-size: 0.88rem; color: var(--muted); line-height: 1.6; }
+
+    /* ── Pricing ── */
+    .pricing { padding: 72px 0; text-align: center; }
+    .price-card {
+      display: inline-block;
+      background: var(--bg-card);
+      border: 1.5px solid var(--accent);
+      border-radius: 14px;
+      padding: 44px 52px;
+      max-width: 440px;
+      width: 100%;
+      text-align: left;
+    }
+    @media (max-width: 480px) { .price-card { padding: 32px 24px; } }
+    .price-plan {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      color: var(--accent);
+      font-weight: 700;
+      margin-bottom: 20px;
+    }
+    .price-amount { font-size: clamp(3rem, 9vw, 4rem); font-weight: 900; line-height: 1; }
+    .price-mo { font-size: 0.95rem; color: var(--muted); margin: 6px 0 28px; }
+    .check-list { list-style: none; margin-bottom: 36px; }
+    .check-list li {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      padding: 7px 0;
+      font-size: 0.95rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .check-list li:last-child { border-bottom: none; }
+    .check-list li::before { content: "✓"; color: var(--green); font-weight: 800; flex-shrink: 0; margin-top: 1px; }
+
+    /* ── FAQ ── */
+    .faq { padding: 72px 0; }
+    .faq-list { margin-top: 40px; }
+    .faq-item {
+      border-bottom: 1px solid var(--border);
+    }
+    .faq-item:first-child { border-top: 1px solid var(--border); }
+    .faq-btn {
+      width: 100%;
+      background: none;
+      border: none;
+      color: var(--text);
+      text-align: left;
+      cursor: pointer;
+      padding: 20px 0;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+    .faq-q { font-weight: 700; font-size: 1rem; flex: 1; }
+    .faq-icon {
+      color: var(--accent);
+      font-size: 1.4rem;
+      font-weight: 300;
+      flex-shrink: 0;
+      transition: transform 0.25s;
+      line-height: 1;
+    }
+    .faq-item.open .faq-icon { transform: rotate(45deg); }
+    .faq-body { overflow: hidden; max-height: 0; transition: max-height 0.3s ease, padding 0.3s ease; }
+    .faq-item.open .faq-body { max-height: 200px; }
+    .faq-a { font-size: 0.9rem; color: var(--muted); line-height: 1.6; padding-bottom: 20px; }
+
+    /* ── Final CTA ── */
+    .cta-strip { padding: 80px 0; text-align: center; }
+    .cta-strip h2 { font-size: clamp(1.4rem, 4vw, 2rem); font-weight: 800; margin-bottom: 12px; }
+    .cta-strip p { color: var(--muted); margin-bottom: 32px; font-size: 0.95rem; }
+
+    /* ── Footer ── */
+    footer {
+      border-top: 1px solid var(--border);
+      padding: 28px 0;
+      text-align: center;
+      font-size: 0.83rem;
+      color: var(--muted);
+    }
+    footer a { color: var(--muted); text-decoration: underline; }
+    footer a:hover { color: var(--accent); }
+  </style>
+  <link rel="icon" type="image/svg+xml" href="/logo.svg" />
+  <link rel="apple-touch-icon" href="/logo.svg" />
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    "name": "RingCatch.io.io",
+    "url": "https://ringcatch.io",
+    "logo": "https://ringcatch.io/logo.svg",
+    "areaServed": "US",
+    "description": "Leading AI Chatbot provider for trade and service businesses in the United States."
+  }
+  </script>
+</head>
+<body>
+
+<!-- ── Nav ──────────────────────────────────────────────────── -->
+<nav id="main-nav">
+  <div class="wrap">
+    <a href="/" class="logo">RING<span class="catch">CATCH</span>.io</a>
+    <div class="nav-right">
+      <a href="#how" class="nav-link">How it works</a>
+      <a href="#pricing" class="nav-link">Pricing</a>
+      <a href="/book" class="nav-link nav-link-contact">Contact</a>
+      <a href="/book" class="nav-cta">Get Started →</a>
+    </div>
+  </div>
+</nav>
+
+<!-- ── Hero ─────────────────────────────────────────────────── -->
+<section class="hero">
+  <div class="wrap">
+    <div class="hero-badge">Live on websites now</div>
+    <h1 class="hero-mark">RING<span class="catch">CATCH</span>.io</h1>
+    <p class="hero-tag">"Every lead caught. Every customer served."</p>
+    <p class="hero-sub">
+      Commercial-grade AI support for your small business — answers questions,
+      captures leads, and books appointments 24/7. Set up in 48 hours.
+    </p>
+    <div class="hero-ctas">
+      <a href="/book" class="btn">Get Started Free →</a>
+      <button class="btn btn-ghost" id="hero-chat-btn" onclick="openChatWidget()">💬 Chat with us live</button>
+    </div>
+
+    <div class="hero-stats">
+      <div>
+        <div class="hero-stat-val">48hr</div>
+        <div class="hero-stat-label">Setup turnaround</div>
+      </div>
+      <div>
+        <div class="hero-stat-val">24/7</div>
+        <div class="hero-stat-label">Always-on coverage</div>
+      </div>
+      <div>
+        <div class="hero-stat-val">&lt;3s</div>
+        <div class="hero-stat-label">Response time</div>
+      </div>
+      <div>
+        <div class="hero-stat-val">$0</div>
+        <div class="hero-stat-label">Free onboarding call</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<hr class="divider" />
+
+<!-- ── Pain ──────────────────────────────────────────────────── -->
+<div class="pain-wrap">
+  <div class="wrap">
+    <div class="pain-box">
+      <p class="pain-headline">
+        Your competitors are answering customers at <em>2am</em>. Are you?
+      </p>
+      <p class="pain-body">
+        The average customer contacts three businesses and goes with whoever responds first.
+        Every after-hours message you miss is a sale that walks straight to someone else.
+        RingCatch.io keeps you first — without adding a single hour to your day.
+      </p>
+    </div>
+  </div>
+</div>
+
+<hr class="divider" />
+
+<!-- ── What it does ───────────────────────────────────────────── -->
+<section class="what">
+  <div class="wrap">
+    <p class="eyebrow">What RingCatch.io does</p>
+    <h2 class="section-h">An AI employee that never clocks out</h2>
+    <div class="what-grid">
+
+      <div class="what-item">
+        <div class="what-icon">💬</div>
+        <div class="what-title">Answers customer questions instantly</div>
+        <p class="what-desc">
+          Your chatbot knows your business — services, pricing, hours, FAQs.
+          It responds in plain, friendly language the moment a customer asks,
+          any time of day.
+        </p>
+      </div>
+
+      <div class="what-item">
+        <div class="what-icon">🎯</div>
+        <div class="what-title">Captures and qualifies every lead</div>
+        <p class="what-desc">
+          Instead of losing visitors, the bot asks the right questions,
+          collects contact info, and hands you a qualified lead — ready to close.
+        </p>
+      </div>
+
+      <div class="what-item">
+        <div class="what-icon">📅</div>
+        <div class="what-title">Books appointments automatically</div>
+        <p class="what-desc">
+          Connects directly to your calendar. Customers can schedule a call
+          or service visit without you lifting a finger.
+        </p>
+      </div>
+
+      <div class="what-item">
+        <div class="what-icon">🌙</div>
+        <div class="what-title">Works 24/7 — including holidays</div>
+        <p class="what-desc">
+          Midnight on Christmas? Your chatbot still answers. No on-call staff,
+          no missed opportunities, no extra cost.
+        </p>
+      </div>
+
+      <div class="what-item">
+        <div class="what-icon">🧠</div>
+        <div class="what-title">Learns your business, not a template</div>
+        <p class="what-desc">
+          We train the AI on your specific services, tone, and common questions —
+          not a generic script. Customers get answers that actually make sense
+          for your business.
+        </p>
+      </div>
+
+      <div class="what-item">
+        <div class="what-icon">📊</div>
+        <div class="what-title">Tracks every conversation</div>
+        <p class="what-desc">
+          See exactly what customers are asking, which leads came in, and what
+          questions your bot answered. All in one simple dashboard.
+        </p>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<hr class="divider" />
+
+<!-- ── How it works ───────────────────────────────────────────── -->
+<section class="how" id="how">
+  <div class="wrap">
+    <p class="eyebrow">How it works</p>
+    <h2 class="section-h">Live on your website in 3 steps</h2>
+    <div class="steps">
+
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-title">Book a free 15-min call</div>
+        <p class="step-desc">
+          Tell us about your business. We'll ask about your services,
+          common customer questions, and how you want leads handled.
+        </p>
+      </div>
+
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-title">We build and train your bot</div>
+        <p class="step-desc">
+          We configure the AI for your business, load your FAQs, connect
+          your calendar, and test everything. You don't touch a single line of code.
+        </p>
+      </div>
+
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-title">Go live in 48 hours</div>
+        <p class="step-desc">
+          We drop a single snippet onto your website. From that moment,
+          your AI is live — answering customers and capturing leads around the clock.
+        </p>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<hr class="divider" />
+
+<!-- ── Who it's for ───────────────────────────────────────────── -->
+<section class="use-cases">
+  <div class="wrap">
+    <p class="eyebrow">Who it's for</p>
+    <h2 class="section-h">Any small business that talks to customers</h2>
+    <p style="color:var(--muted); font-size:0.95rem; max-width:600px; margin-bottom:8px;">
+      If customers ask you questions, request quotes, or book appointments —
+      RingCatch.io handles it automatically. We work with businesses in every industry.
+    </p>
+    <div class="tag-cloud">
+      <span class="tag">HVAC</span>
+      <span class="tag">Plumbing</span>
+      <span class="tag">Electrical</span>
+      <span class="tag">Roofing</span>
+      <span class="tag">Landscaping</span>
+      <span class="tag">Auto Repair</span>
+      <span class="tag">Dental &amp; Medical</span>
+      <span class="tag">Law Firms</span>
+      <span class="tag">Real Estate</span>
+      <span class="tag">Insurance</span>
+      <span class="tag">Salons &amp; Spas</span>
+      <span class="tag">Gyms &amp; Fitness</span>
+      <span class="tag">Restaurants</span>
+      <span class="tag">Cleaning Services</span>
+      <span class="tag">Pest Control</span>
+      <span class="tag">Retail</span>
+      <span class="tag">Veterinary</span>
+      <span class="tag">Home Services</span>
+      <span class="tag">+ any small business</span>
+    </div>
+  </div>
+</section>
+
+<hr class="divider" />
+
+<!-- ── Benefits ──────────────────────────────────────────────── -->
+<section class="benefits">
+  <div class="wrap">
+    <p class="eyebrow">Why RingCatch.io</p>
+    <h2 class="section-h">Enterprise AI at a small business price</h2>
+    <div class="cards">
+
+      <div class="card">
+        <div class="card-icon">⚡</div>
+        <div class="card-title">Responds in under 3 seconds</div>
+        <p class="card-desc">
+          Speed wins customers. Your bot qualifies and responds before
+          they even finish typing — faster than any human can.
+        </p>
+      </div>
+
+      <div class="card">
+        <div class="card-icon">🔧</div>
+        <div class="card-title">Zero tech skills required</div>
+        <p class="card-desc">
+          We handle the entire setup. No logins to learn, no software to
+          manage — just results in your inbox.
+        </p>
+      </div>
+
+      <div class="card">
+        <div class="card-icon">💰</div>
+        <div class="card-title">A fraction of hiring staff</div>
+        <p class="card-desc">
+          A part-time receptionist costs $2,000+/month. RingCatch.io delivers
+          the same coverage at a fraction of the price — 24/7.
+        </p>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<hr class="divider" />
+
+<!-- ── Pricing ───────────────────────────────────────────────── -->
+<section class="pricing" id="pricing">
+  <div class="wrap">
+    <p class="eyebrow">Simple pricing</p>
+    <h2 class="section-h" style="margin-bottom:40px;">One flat price. No surprises.</h2>
+
+    <div style="display:flex;justify-content:center;">
+      <div class="price-card">
+        <p class="price-plan">Full Setup Package</p>
+        <div class="price-amount">$450</div>
+        <p class="price-mo">one-time setup &nbsp;+&nbsp; <strong>$89 / month</strong></p>
+
+        <ul class="check-list">
+          <li>Custom AI chatbot built for your business</li>
+          <li>Installed on your existing website</li>
+          <li>Captures leads and books appointments 24/7</li>
+          <li>Trained on your services, tone, and FAQs</li>
+          <li>Monthly tuning and maintenance included</li>
+          <li>48-hour turnaround — zero tech work from you</li>
+        </ul>
+
+        <a href="/book" class="btn btn-block">
+          Book a Free Call →
+        </a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<hr class="divider" />
+
+<!-- ── FAQ ───────────────────────────────────────────────────── -->
+<section class="faq">
+  <div class="wrap">
+    <p class="eyebrow">Common questions</p>
+    <h2 class="section-h">FAQ</h2>
+    <div class="faq-list">
+
+      <div class="faq-item">
+        <button class="faq-btn" aria-expanded="false">
+          <span class="faq-q">Does my website need to be rebuilt?</span>
+          <span class="faq-icon">+</span>
+        </button>
+        <div class="faq-body">
+          <p class="faq-a">No. We add a small snippet to your existing site — one line of code. Works on WordPress, Wix, Squarespace, Shopify, or custom sites.</p>
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-btn" aria-expanded="false">
+          <span class="faq-q">How does the bot know about my business?</span>
+          <span class="faq-icon">+</span>
+        </button>
+        <div class="faq-body">
+          <p class="faq-a">During onboarding we collect your services, pricing, FAQs, and business details. We feed all of that into the AI so it answers accurately for your specific business — not a generic template.</p>
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-btn" aria-expanded="false">
+          <span class="faq-q">What happens when the bot can't answer something?</span>
+          <span class="faq-icon">+</span>
+        </button>
+        <div class="faq-body">
+          <p class="faq-a">The bot collects the customer's name, number, and question, and flags it for you to follow up. Nothing falls through the cracks.</p>
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-btn" aria-expanded="false">
+          <span class="faq-q">Can I update the bot's answers later?</span>
+          <span class="faq-icon">+</span>
+        </button>
+        <div class="faq-body">
+          <p class="faq-a">Yes — either through a simple dashboard, or just email us and we'll update it same-day. Monthly maintenance is included in the subscription.</p>
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-btn" aria-expanded="false">
+          <span class="faq-q">What if I want to cancel?</span>
+          <span class="faq-icon">+</span>
+        </button>
+        <div class="faq-body">
+          <p class="faq-a">No contracts, no cancellation fees. Cancel anytime with 30 days' notice. The $450 setup is a one-time cost — you keep everything we built.</p>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<hr class="divider" />
+
+<!-- ── Final CTA ─────────────────────────────────────────────── -->
+<section class="cta-strip">
+  <div class="wrap">
+    <h2>Ready to stop missing customers?</h2>
+    <p>Book a free 15-minute call. We'll show you exactly how it works for your business.</p>
+    <div class="hero-ctas">
+      <a href="/book" class="btn">Book a Call →</a>
+      <button class="btn btn-ghost" onclick="openChatWidget()">💬 Chat with us now</button>
+    </div>
+  </div>
+</section>
+
+<!-- ── Footer ────────────────────────────────────────────────── -->
+<footer>
+  <div class="wrap">
+    <p>
+      © 2026 RingCatch.io &nbsp;·&nbsp;
+      <a href="mailto:alex@ringcatch.io">alex@ringcatch.io</a>
+      &nbsp;·&nbsp;
+      ringcatch.io
+    </p>
+  </div>
+</footer>
+
+<style>
+  /* ── Chat Widget ─────────────────────────────────────────────────── */
+  #rc-bubble {
+    position: fixed; bottom: 24px; right: 24px; z-index: 9999;
+    width: 56px; height: 56px; border-radius: 50%;
+    background: transparent; border: none; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 4px 20px rgba(34,211,238,.4);
+    transition: transform .2s, box-shadow .2s;
+    padding: 0;
+  }
+  #rc-bubble:hover { transform: scale(1.08); box-shadow: 0 6px 28px rgba(34,211,238,.55); }
+  #rc-bubble > svg { width: 56px; height: 56px; border-radius: 50%; }
+  #rc-bubble .rc-badge {
+    position: absolute; top: -2px; right: -2px;
+    width: 16px; height: 16px; border-radius: 50%;
+    background: #ef4444; border: 2px solid var(--bg);
+    display: none;
+  }
+  #rc-bubble .rc-badge.show { display: block; }
+
+  #rc-panel {
+    position: fixed; bottom: 90px; right: 24px; z-index: 9998;
+    width: 360px; max-width: calc(100vw - 32px);
+    background: #111122; border: 1px solid var(--border);
+    border-radius: 16px; box-shadow: 0 8px 40px rgba(0,0,0,.6);
+    display: flex; flex-direction: column;
+    transform: scale(.92) translateY(16px); opacity: 0;
+    pointer-events: none;
+    transition: transform .22s cubic-bezier(.34,1.56,.64,1), opacity .18s;
+    overflow: hidden;
+  }
+  #rc-panel.open { transform: scale(1) translateY(0); opacity: 1; pointer-events: all; }
+
+  .rc-header {
+    background: linear-gradient(135deg, #0891b2, #22d3ee);
+    padding: 14px 16px; display: flex; align-items: center; gap: 10px;
+  }
+  .rc-avatar {
+    width: 36px; height: 36px; border-radius: 50%;
+    flex-shrink: 0; overflow: hidden;
+    box-shadow: 0 0 0 2px rgba(255,255,255,.25);
+  }
+  .rc-header-text { flex: 1; }
+  .rc-header-name { font-weight: 700; font-size: .95rem; color: #fff; }
+  .rc-header-sub { font-size: .75rem; color: rgba(255,255,255,.75); }
+  .rc-close {
+    background: none; border: none; cursor: pointer;
+    color: rgba(255,255,255,.8); font-size: 20px; padding: 0 4px; line-height: 1;
+  }
+  .rc-close:hover { color: #fff; }
+
+  #rc-messages {
+    flex: 1; overflow-y: auto; padding: 16px; display: flex;
+    flex-direction: column; gap: 10px; min-height: 280px; max-height: 380px;
+  }
+  #rc-messages::-webkit-scrollbar { width: 4px; }
+  #rc-messages::-webkit-scrollbar-track { background: transparent; }
+  #rc-messages::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+
+  .rc-msg { max-width: 82%; display: flex; flex-direction: column; }
+  .rc-msg.bot { align-self: flex-start; }
+  .rc-msg.user { align-self: flex-end; }
+  .rc-bubble-text {
+    padding: 10px 13px; border-radius: 14px; font-size: .875rem; line-height: 1.5; word-break: break-word;
+  }
+  .rc-msg.bot  .rc-bubble-text { background: #1c1c30; color: var(--text); border-bottom-left-radius: 4px; }
+  .rc-msg.user .rc-bubble-text { background: var(--accent); color: #0b0b14; font-weight: 500; border-bottom-right-radius: 4px; }
+
+  .rc-typing { display: flex; gap: 4px; padding: 12px 13px; background: #1c1c30; border-radius: 14px; border-bottom-left-radius: 4px; width: fit-content; }
+  .rc-typing span { width: 7px; height: 7px; border-radius: 50%; background: var(--muted); animation: rcbounce 1.2s infinite; }
+  .rc-typing span:nth-child(2) { animation-delay: .2s; }
+  .rc-typing span:nth-child(3) { animation-delay: .4s; }
+  @keyframes rcbounce { 0%,60%,100% { transform: translateY(0); } 30% { transform: translateY(-6px); } }
+
+  .rc-footer {
+    padding: 10px 12px; border-top: 1px solid var(--border);
+    display: flex; gap: 8px; align-items: flex-end;
+  }
+  #rc-input {
+    flex: 1; background: #0b0b14; border: 1px solid var(--border); border-radius: 10px;
+    padding: 9px 12px; color: var(--text); font-size: .875rem; resize: none;
+    outline: none; max-height: 100px; line-height: 1.4; font-family: inherit;
+  }
+  #rc-input:focus { border-color: var(--accent); }
+  #rc-input::placeholder { color: var(--muted); }
+  #rc-send {
+    background: var(--accent); border: none; border-radius: 10px;
+    width: 38px; height: 38px; flex-shrink: 0; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    transition: background .15s;
+  }
+  #rc-send:hover { background: var(--accent-d); }
+  #rc-send:disabled { background: var(--border); cursor: default; }
+  #rc-send svg { width: 18px; height: 18px; fill: #0b0b14; }
+
+  .rc-powered { text-align: center; font-size: .68rem; color: var(--muted); padding: 4px 0 8px; }
+  .rc-powered a { color: var(--muted); text-decoration: none; }
+</style>
+
+<!-- Chat Bubble -->
+<button id="rc-bubble" aria-label="Chat with us">
+  <svg viewBox="0 0 100 100" width="30" height="30" style="border-radius:50%">
+    <defs><linearGradient id="rcg" x1="0" y1="0" x2="100" y2="100" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#22d3ee"/><stop offset="100%" stop-color="#0891b2"/></linearGradient></defs>
+    <circle cx="50" cy="50" r="50" fill="url(#rcg)"/>
+    <text x="50" y="66" font-family="Arial,Helvetica,sans-serif" font-size="38" font-weight="900" text-anchor="middle" fill="#0b0b14" letter-spacing="-1">RC</text>
+  </svg>
+  <span class="rc-badge" id="rc-badge"></span>
+</button>
+
+<!-- Chat Panel -->
+<div id="rc-panel" role="dialog" aria-label="RingCatch.io chat">
+  <div class="rc-header">
+    <div class="rc-avatar">
+      <svg viewBox="0 0 100 100" width="36" height="36" style="border-radius:50%;display:block">
+        <defs><linearGradient id="rcg2" x1="0" y1="0" x2="100" y2="100" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#22d3ee"/><stop offset="100%" stop-color="#0891b2"/></linearGradient></defs>
+        <circle cx="50" cy="50" r="50" fill="url(#rcg2)"/>
+        <text x="50" y="66" font-family="Arial,Helvetica,sans-serif" font-size="38" font-weight="900" text-anchor="middle" fill="#0b0b14" letter-spacing="-1">RC</text>
+      </svg>
+    </div>
+    <div class="rc-header-text">
+      <div class="rc-header-name">Alex · RingCatch.io AI</div>
+      <div class="rc-header-sub">Typically replies instantly</div>
+    </div>
+    <button class="rc-close" id="rc-close" aria-label="Close chat">✕</button>
+  </div>
+  <div id="rc-messages"></div>
+  <div class="rc-footer">
+    <textarea id="rc-input" rows="1" placeholder="Ask me anything…" autocomplete="off"></textarea>
+    <button id="rc-send" aria-label="Send">
+      <svg viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
+    </button>
+  </div>
+  <div class="rc-powered"><a href="https://ringcatch.io">Powered by RingCatch.io AI</a></div>
+</div>
+
+<script>
+(function() {
+  const STORAGE_KEY = 'rc_session';
+  const GREETING = "Hey! 👋 I'm Alex, RingCatch.io's AI assistant — and yes, I'm also a live demo of what we build for businesses like yours. What kind of business do you run?";
+
+  let sessionId = localStorage.getItem(STORAGE_KEY) || '';
+  let isOpen = false;
+  let isWaiting = false;
+  let greeted = false;
+
+  const panel   = document.getElementById('rc-panel');
+  const bubble  = document.getElementById('rc-bubble');
+  const badge   = document.getElementById('rc-badge');
+  const msgs    = document.getElementById('rc-messages');
+  const input   = document.getElementById('rc-input');
+  const send    = document.getElementById('rc-send');
+  const closeBtn= document.getElementById('rc-close');
+
+  function open() {
+    isOpen = true;
+    panel.classList.add('open');
+    badge.classList.remove('show');
+    input.focus();
+    if (!greeted) { greeted = true; addMsg('bot', GREETING); }
+  }
+  function close() { isOpen = false; panel.classList.remove('open'); }
+
+  bubble.addEventListener('click', () => isOpen ? close() : open());
+  closeBtn.addEventListener('click', close);
+
+  // Expose open() globally so other page elements can trigger the chat
+  window.openChatWidget = function() { if (!isOpen) open(); };
+
+  function addMsg(role, text) {
+    const div = document.createElement('div');
+    div.className = `rc-msg ${role}`;
+    const bub = document.createElement('div');
+    bub.className = 'rc-bubble-text';
+    bub.innerHTML = text.replace(/\n/g,'<br>').replace(/(https?:\/\/[^\s<]+)/g,'<a href="$1" target="_blank" rel="noopener" style="color:var(--accent)">$1</a>');
+    div.appendChild(bub);
+    msgs.appendChild(div);
+    msgs.scrollTop = msgs.scrollHeight;
+    return div;
+  }
+
+  function showTyping() {
+    const div = document.createElement('div');
+    div.className = 'rc-msg bot';
+    div.id = 'rc-typing';
+    div.innerHTML = '<div class="rc-typing"><span></span><span></span><span></span></div>';
+    msgs.appendChild(div);
+    msgs.scrollTop = msgs.scrollHeight;
+  }
+  function hideTyping() {
+    const t = document.getElementById('rc-typing');
+    if (t) t.remove();
+  }
+
+  async function sendMsg() {
+    const text = input.value.trim();
+    if (!text || isWaiting) return;
+    input.value = '';
+    input.style.height = 'auto';
+    addMsg('user', text);
+    isWaiting = true;
+    send.disabled = true;
+    showTyping();
+
+    try {
+      const res = await fetch('/api/chat', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({message: text, session_id: sessionId}),
+      });
+      const data = await res.json();
+      sessionId = data.session_id || sessionId;
+      localStorage.setItem(STORAGE_KEY, sessionId);
+      hideTyping();
+      addMsg('bot', data.response || "One sec — can I grab your name and best number so Mike can follow up with you directly?");
+    } catch(e) {
+      hideTyping();
+      addMsg('bot', "One sec — can I grab your name and best number so Mike can follow up with you directly?");
+    }
+    isWaiting = false;
+    send.disabled = false;
+    input.focus();
+  }
+
+  send.addEventListener('click', sendMsg);
+  input.addEventListener('keydown', e => {
+    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMsg(); }
+  });
+  input.addEventListener('input', () => {
+    input.style.height = 'auto';
+    input.style.height = Math.min(input.scrollHeight, 100) + 'px';
+  });
+
+  // Proactive open after 10s if visitor hasn't interacted
+  setTimeout(() => {
+    if (!isOpen) {
+      badge.classList.add('show');
+      setTimeout(() => { if (!isOpen) open(); }, 4000);
+    }
+  }, 10000);
+})();
+</script>
+
+<script>
+  // Pageview tracking
+  fetch('/api/track', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({page: '/', referrer: document.referrer})
+  }).catch(() => {});
+
+  // Sticky nav shadow on scroll
+  const nav = document.getElementById('main-nav');
+  window.addEventListener('scroll', () => {
+    nav.classList.toggle('scrolled', window.scrollY > 10);
+  }, { passive: true });
+
+  // FAQ accordion
+  document.querySelectorAll('.faq-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const item = btn.closest('.faq-item');
+      const isOpen = item.classList.contains('open');
+      // Close all
+      document.querySelectorAll('.faq-item.open').forEach(el => {
+        el.classList.remove('open');
+        el.querySelector('.faq-btn').setAttribute('aria-expanded', 'false');
+      });
+      // Open clicked (if it was closed)
+      if (!isOpen) {
+        item.classList.add('open');
+        btn.setAttribute('aria-expanded', 'true');
+      }
+    });
+  });
+</script>
+</body>
+</html>

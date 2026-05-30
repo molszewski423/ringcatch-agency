@@ -1,0 +1,16 @@
+[Unit]
+Description=RingCatch landing page (nginx)
+After=agency-pod-pod.service
+Requires=agency-pod-pod.service
+
+[Container]
+Image=localhost/agency-landing:latest
+ContainerName=agency-landing
+Pod=agency-pod.pod
+
+[Service]
+Restart=on-failure
+TimeoutStartSec=30
+
+[Install]
+WantedBy=default.target

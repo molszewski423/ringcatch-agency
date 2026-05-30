@@ -1,0 +1,23 @@
+[Unit]
+Description=Agency Stripe billing webhook listener
+After=agency-pod-pod.service
+Requires=agency-pod-pod.service
+
+[Container]
+Image=localhost/agency-billing:latest
+ContainerName=agency-billing
+Pod=agency-pod.pod
+
+Volume=agency-data:/data:Z
+EnvironmentFile=%h/agency/.env
+
+Environment=STRIPE_SECRET_KEY=%E{STRIPE_SECRET_KEY}
+Environment=STRIPE_WEBHOOK_SECRET=%E{STRIPE_WEBHOOK_SECRET}
+Environment=DELIVERY_URL=%E{DELIVERY_URL}
+
+[Service]
+Restart=on-failure
+TimeoutStartSec=60
+
+[Install]
+WantedBy=default.target

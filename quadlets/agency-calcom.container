@@ -1,0 +1,22 @@
+[Unit]
+Description=Agency Cal.com self-hosted booking
+After=agency-postgres.service
+Requires=agency-pod-pod.service
+
+[Container]
+Image=docker.io/calcom/cal.com:latest
+ContainerName=agency-calcom
+Pod=agency-pod.pod
+
+EnvironmentFile=%h/agency/.env
+Environment=DATABASE_URL=%E{DATABASE_URL}
+Environment=NEXTAUTH_SECRET=%E{NEXTAUTH_SECRET}
+Environment=NEXTAUTH_URL=%E{NEXTAUTH_URL}
+Environment=CALENDSO_ENCRYPTION_KEY=%E{CALENDSO_ENCRYPTION_KEY}
+
+[Service]
+Restart=on-failure
+TimeoutStartSec=180
+
+[Install]
+WantedBy=default.target

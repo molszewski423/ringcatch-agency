@@ -1,0 +1,15 @@
+FROM docker.io/library/nginx:alpine
+
+# Remove the legacy application/javascript entry — nginx:alpine's mime.types
+# defines both application/javascript and text/javascript for .js, causing a
+# duplicate-extension warning. Keep only the RFC 9239 standard type.
+RUN sed -i '/^\s*application\/javascript/d' /etc/nginx/mime.types
+
+COPY nginx.conf    /etc/nginx/nginx.conf
+COPY index.html    /usr/share/nginx/html/index.html
+COPY book.html     /usr/share/nginx/html/book.html
+COPY bimi-logo.svg /usr/share/nginx/html/bimi-logo.svg
+COPY logo.svg      /usr/share/nginx/html/logo.svg
+COPY logo.svg      /usr/share/nginx/html/favicon.svg
+
+EXPOSE 8090

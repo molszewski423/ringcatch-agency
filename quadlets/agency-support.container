@@ -1,0 +1,19 @@
+[Unit]
+Description=Agency Tech Support monitor
+After=agency-pod-pod.service
+Requires=agency-pod-pod.service
+
+[Container]
+Image=localhost/agency-support:latest
+ContainerName=agency-support
+Pod=agency-pod.pod
+Volume=agency-data:/data:Z
+Volume=/run/user/1000/podman/podman.sock:/run/podman/podman.sock:Z
+EnvironmentFile=%h/agency/.env
+
+[Service]
+Restart=on-failure
+TimeoutStartSec=120
+
+[Install]
+WantedBy=default.target

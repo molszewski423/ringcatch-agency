@@ -1,0 +1,146 @@
+{
+  "name": "Lead Scrape Orchestrator",
+  "nodes": [
+    {
+      "id": "a1b2c3d4-0001-0000-0000-000000000001",
+      "name": "Daily 8am (Weekdays)",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.1,
+      "position": [200, 300],
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 8 * * 1-5"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "a1b2c3d4-0002-0000-0000-000000000002",
+      "name": "Trigger Scraper",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [440, 300],
+      "parameters": {
+        "method": "POST",
+        "url": "http://localhost:8079/scrape",
+        "options": {
+          "timeout": 10000,
+          "response": {
+            "response": {
+              "fullResponse": false
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "a1b2c3d4-0003-0000-0000-000000000003",
+      "name": "Wait 5 minutes",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [680, 300],
+      "parameters": {
+        "unit": "minutes",
+        "amount": 5
+      }
+    },
+    {
+      "id": "a1b2c3d4-0004-0000-0000-000000000004",
+      "name": "Fetch Today's Leads",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [920, 300],
+      "parameters": {
+        "method": "GET",
+        "url": "http://localhost:8079/leads/today",
+        "options": {}
+      }
+    },
+    {
+      "id": "a1b2c3d4-0005-0000-0000-000000000005",
+      "name": "Has Leads?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [1160, 300],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": false,
+            "leftValue": "",
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "cond-has-leads",
+              "leftValue": "={{ $json.leads.length }}",
+              "rightValue": 0,
+              "operator": {
+                "type": "number",
+                "operation": "gt"
+              }
+            }
+          ],
+          "combinator": "and"
+        }
+      }
+    },
+    {
+      "id": "a1b2c3d4-0006-0000-0000-000000000006",
+      "name": "Send to Outreach",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [1400, 220],
+      "parameters": {
+        "method": "POST",
+        "url": "http://localhost:8080/ingest-leads",
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ leads: $json.leads }) }}",
+        "options": {
+          "timeout": 15000
+        }
+      }
+    },
+    {
+      "id": "a1b2c3d4-0007-0000-0000-000000000007",
+      "name": "No Leads — Stop",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [1400, 400],
+      "parameters": {}
+    }
+  ],
+  "connections": {
+    "Daily 8am (Weekdays)": {
+      "main": [[{"node": "Trigger Scraper", "type": "main", "index": 0}]]
+    },
+    "Trigger Scraper": {
+      "main": [[{"node": "Wait 5 minutes", "type": "main", "index": 0}]]
+    },
+    "Wait 5 minutes": {
+      "main": [[{"node": "Fetch Today's Leads", "type": "main", "index": 0}]]
+    },
+    "Fetch Today's Leads": {
+      "main": [[{"node": "Has Leads?", "type": "main", "index": 0}]]
+    },
+    "Has Leads?": {
+      "main": [
+        [{"node": "Send to Outreach", "type": "main", "index": 0}],
+        [{"node": "No Leads — Stop", "type": "main", "index": 0}]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "saveManualExecutions": true,
+    "callerPolicy": "workflowsFromSameOwner",
+    "errorWorkflow": ""
+  },
+  "versionId": "1"
+}

@@ -1,0 +1,24 @@
+Loom Handoff — Arctic Air HVAC
+Presenter: Alex · RingCatch · ringcatch.io
+
+[0:00]
+Hey Dave Kowalski, welcome to RingCatch! Quick 2-minute walkthrough of
+your new AI chatbot for Arctic Air HVAC.
+
+[0:30]
+Let's test it. Go to your website, click the chat bubble, and type
+"Do you offer emergency service?" — watch the bot answer in under a second
+with your custom response.
+
+[1:00]
+When a lead messages after hours, the bot captures their info and you get
+an email alert. Every conversation is saved in your Botpress dashboard
+so nothing falls through the cracks.
+
+[1:45]
+Need to update an answer? Log into Botpress, find the FAQ node, click Edit,
+type the new answer, Save. Takes 30 seconds and goes live immediately.
+
+[2:15]
+Questions anytime — alex@ringcatchai.com, usually same-day response.
+Welcome to RingCatch. Enjoy the leads!

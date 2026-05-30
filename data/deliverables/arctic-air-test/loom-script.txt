@@ -1,0 +1,18 @@
+Hey Dave! 
+
+[0:00] 
+Hey Dave, hope things are going well over at Arctic Air HVAC. I’m super excited to show you this. I’ve finished setting up your new AI chatbot, and the main goal here is simple: making sure you never miss a service call. For an HVAC business in a busy market like Charlotte, we know that whoever responds first usually wins the job. This bot acts as your 24/7 receptionist, handling the basic questions so you can focus on the actual repairs.
+
+[0:30] 
+Let’s jump right into the demo. I’m going to pull up the chat interface here. I’ll type in a common question a customer might ask—something like, "Do you provide emergency AC repair in Charlotte?" and watch how instantly it pulls the answer from your specific business info. It’s fast, it’s accurate, and it feels totally natural to the customer.
+
+[1:00] 
+Now, here is the real "magic" part for when you're out on a job or it's late at night. If a lead messages you after hours when you aren't able to pick up the phone, the bot doesn't just leave them hanging. It will proactively ask for their name, their phone number, and what kind of issue they're having. It captures that lead and sends it straight to you, so you can just wake up, see a new appointment request, and call them back first thing in the morning.
+
+[1:45] 
+I also wanted to show you that you have total control. If you ever change your pricing or add a new service, you don't need to call me to fix it. I’ve set this up in Botpress so that updating an FAQ is a 30-second task. You just find the text, type the new answer, and hit save. It’s very straightforward, I'll show you more on that if we jump on a call later.
+
+[2:15] 
+That’s the grand tour! I'm really proud of how this turned out for Arctic Air. If you run into any questions while you're poking around, or if you want to add more features, just reach out to me directly at alex@ringcatchai.com or head over to ringcatch.io. 
+
+Talk soon, Dave!

@@ -1,0 +1,968 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RingCatch Command Center</title>
+<script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+  :root {
+    --bg: #0f1117; --surface: #1a1d27; --card: #20253a;
+    --border: #2d3448; --text: #e2e8f0; --muted: #8892a4;
+    --green: #22c55e; --red: #ef4444; --yellow: #eab308;
+    --blue: #3b82f6; --purple: #a855f7; --orange: #f97316;
+    --cyan: #06b6d4;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font-family: -apple-system, 'Inter', sans-serif; font-size: 14px; }
+  .app { display: grid; grid-template-rows: auto auto 1fr; min-height: 100vh; gap: 0; }
+
+  /* Health bar */
+  .health-bar { background: var(--surface); border-bottom: 1px solid var(--border); padding: 10px 20px; display: flex; gap: 24px; align-items: center; flex-wrap: wrap; }
+  .hb-item { display: flex; flex-direction: column; gap: 2px; }
+  .hb-label { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: .5px; }
+  .hb-value { font-size: 16px; font-weight: 700; }
+  .hb-title { font-weight: 800; font-size: 18px; color: var(--cyan); margin-right: 8px; }
+  .dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 4px; }
+  .dot-green { background: var(--green); }
+  .dot-red { background: var(--red); }
+  .dot-yellow { background: var(--yellow); }
+  .refresh-btn { margin-left: auto; background: var(--blue); border: none; color: white; padding: 6px 14px; border-radius: 6px; cursor: pointer; font-size: 12px; transition: opacity .2s; }
+  .refresh-btn:disabled { opacity: .5; cursor: not-allowed; }
+  .alert-bell-wrap { position: relative; }
+  .alert-bell { position: relative; cursor: pointer; background: none; border: none; color: var(--text); font-size: 18px; padding: 2px 4px; border-radius: 6px; transition: background .15s; }
+  .alert-bell:hover { background: var(--card); }
+  .alert-count { position: absolute; top: -4px; right: -6px; background: var(--red); color: white; border-radius: 50%; width: 16px; height: 16px; font-size: 9px; display: flex; align-items: center; justify-content: center; font-weight: 700; }
+  .alert-dropdown { position: absolute; top: calc(100% + 8px); right: 0; width: 300px; background: var(--surface); border: 1px solid var(--border); border-radius: 10px; box-shadow: 0 12px 40px rgba(0,0,0,.5); z-index: 200; overflow: hidden; }
+  .alert-dropdown-header { padding: 10px 14px; border-bottom: 1px solid var(--border); font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--muted); display: flex; justify-content: space-between; align-items: center; }
+  .alert-ack-all { font-size: 10px; background: var(--card); border: 1px solid var(--border); color: var(--muted); padding: 2px 8px; border-radius: 4px; cursor: pointer; }
+  .alert-ack-all:hover { color: var(--text); }
+  .alert-dropdown-body { max-height: 300px; overflow-y: auto; }
+  .alert-row { padding: 10px 14px; border-bottom: 1px solid var(--border); font-size: 12px; }
+  .alert-row:last-child { border-bottom: none; }
+  .alert-row-top { display: flex; justify-content: space-between; align-items: center; gap: 6px; margin-bottom: 3px; }
+  .alert-row-sev { font-size: 9px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; }
+  .alert-row-sev.critical { color: var(--red); }
+  .alert-row-sev.warning { color: var(--yellow); }
+  .alert-row-sev.info { color: var(--blue); }
+  .alert-row-time { font-size: 10px; color: var(--muted); }
+  .alert-row-msg { color: var(--text); line-height: 1.45; }
+  .alert-empty { padding: 20px; text-align: center; color: var(--muted); font-size: 12px; font-style: italic; }
+
+  /* Main layout */
+  .main { display: grid; grid-template-columns: 280px 1fr 320px; gap: 0; height: calc(100vh - 120px); overflow: hidden; }
+
+  /* Left column: agent status */
+  .left-col { background: var(--surface); border-right: 1px solid var(--border); overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 10px; }
+  .col-title { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: var(--muted); font-weight: 700; margin-bottom: 4px; }
+
+  /* Agent cards */
+  .agent-card { background: var(--card); border: 1px solid var(--border); border-radius: 8px; padding: 12px; cursor: pointer; transition: border-color .2s; }
+  .agent-card:hover { border-color: var(--blue); }
+  .agent-card.online { border-left: 3px solid var(--green); }
+  .agent-card.offline { border-left: 3px solid var(--red); }
+  .agent-card.unknown { border-left: 3px solid var(--yellow); }
+  .agent-name { font-weight: 700; font-size: 13px; }
+  .agent-action { font-size: 11px; color: var(--muted); margin-top: 4px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .agent-meta { display: flex; gap: 8px; margin-top: 6px; }
+  .badge { font-size: 10px; background: var(--border); padding: 2px 6px; border-radius: 4px; }
+
+  /* Center */
+  .center-col { overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 16px; }
+
+  /* Cards */
+  .card { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 16px; }
+  .card-title { font-size: 12px; text-transform: uppercase; letter-spacing: 1px; color: var(--muted); font-weight: 700; margin-bottom: 12px; }
+
+  /* Revenue */
+  .revenue-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 16px; }
+  .rev-stat { background: var(--surface); border-radius: 8px; padding: 12px; }
+  .rev-label { font-size: 11px; color: var(--muted); }
+  .rev-value { font-size: 22px; font-weight: 800; color: var(--green); }
+
+  /* Pipeline kanban */
+  .kanban { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 8px; }
+  .kanban-col { flex: 0 0 120px; background: var(--surface); border-radius: 8px; padding: 10px; }
+  .kanban-stage { font-size: 10px; text-transform: uppercase; letter-spacing: .5px; color: var(--muted); font-weight: 700; }
+  .kanban-count { font-size: 28px; font-weight: 800; color: var(--blue); }
+  .kanban-val { font-size: 11px; color: var(--muted); }
+
+  /* Client table */
+  .client-table { width: 100%; border-collapse: collapse; }
+  .client-table th { text-align: left; padding: 8px; font-size: 11px; text-transform: uppercase; color: var(--muted); border-bottom: 1px solid var(--border); }
+  .client-table td { padding: 8px; border-bottom: 1px solid var(--border); font-size: 12px; }
+  .churn-high { color: var(--red); font-weight: 700; }
+  .churn-med { color: var(--yellow); }
+  .churn-low { color: var(--green); }
+
+  /* Right column: tabs */
+  .right-col { background: var(--surface); border-left: 1px solid var(--border); display: flex; flex-direction: column; overflow: hidden; min-height: 0; }
+  .right-tabs { display: flex; border-bottom: 1px solid var(--border); }
+  .right-tab { flex: 1; padding: 10px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .5px; cursor: pointer; background: none; border: none; color: var(--muted); border-bottom: 2px solid transparent; transition: color .2s; }
+  .right-tab.active { color: var(--cyan); border-bottom-color: var(--cyan); }
+  .feed-header { padding: 12px 16px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+  .feed-scroll { flex: 1; overflow-y: auto; padding: 12px; display: flex; flex-direction: column; gap: 6px; }
+  .feed-item { background: var(--card); border-radius: 6px; padding: 8px 10px; font-size: 12px; }
+  .feed-agent { font-size: 10px; font-weight: 700; text-transform: uppercase; }
+  .feed-msg { color: var(--text); margin-top: 2px; }
+  .feed-time { font-size: 10px; color: var(--muted); margin-top: 2px; }
+  /* Chat panel */
+  .chat-panel { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+  .chat-messages { flex: 1; overflow-y: auto; padding: 12px; display: flex; flex-direction: column; gap: 8px; }
+  .chat-msg { max-width: 90%; padding: 8px 12px; border-radius: 8px; font-size: 13px; line-height: 1.5; white-space: pre-wrap; word-break: break-word; }
+  .chat-msg.user { background: var(--blue); color: white; align-self: flex-end; border-radius: 8px 8px 2px 8px; }
+  .chat-msg.assistant { background: var(--card); border: 1px solid var(--border); align-self: flex-start; border-radius: 8px 8px 8px 2px; }
+  .chat-msg.system { background: none; color: var(--muted); font-size: 11px; align-self: center; font-style: italic; }
+  .chat-input-row { padding: 10px 12px; border-top: 1px solid var(--border); display: flex; gap: 8px; }
+  .chat-input { flex: 1; background: var(--card); border: 1px solid var(--border); border-radius: 6px; color: var(--text); padding: 8px 12px; font-size: 13px; outline: none; font-family: inherit; resize: none; height: 38px; }
+  .chat-input:focus { border-color: var(--blue); }
+  .chat-send { background: var(--blue); border: none; color: white; border-radius: 6px; padding: 8px 14px; cursor: pointer; font-size: 13px; font-weight: 600; white-space: nowrap; }
+  .chat-send:disabled { opacity: .5; cursor: not-allowed; }
+  .chat-thinking { color: var(--muted); font-size: 12px; font-style: italic; padding: 4px 12px; }
+  .mic-btn { background: var(--card); border: 1px solid var(--border); color: var(--text); border-radius: 6px; padding: 8px 12px; cursor: pointer; font-size: 16px; transition: all .2s; }
+  .mic-btn.recording { background: var(--red); border-color: var(--red); animation: pulse 1s infinite; }
+  .mic-btn:disabled { opacity: .5; cursor: not-allowed; }
+  @keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:.6; } }
+  .color-red { border-left: 3px solid var(--red); }
+  .color-green { border-left: 3px solid var(--green); }
+  .color-blue { border-left: 3px solid var(--blue); }
+  .color-orange { border-left: 3px solid var(--orange); }
+  .color-purple { border-left: 3px solid var(--purple); }
+  .color-gold { border-left: 3px solid var(--yellow); }
+
+  /* Milestone progress */
+  .progress-bar { background: var(--border); border-radius: 4px; height: 8px; overflow: hidden; }
+  .progress-fill { background: linear-gradient(90deg, var(--blue), var(--cyan)); height: 100%; transition: width .5s; border-radius: 4px; }
+
+  /* Chart container */
+  .chart-container { height: 200px; position: relative; }
+
+  /* Scrollbar */
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: var(--bg); }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+  /* Agent detail modal */
+  .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,.65); z-index: 100; display: flex; align-items: center; justify-content: center; padding: 20px; }
+  .modal { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; width: 100%; max-width: 520px; max-height: 80vh; display: flex; flex-direction: column; box-shadow: 0 20px 60px rgba(0,0,0,.5); }
+  .modal-header { padding: 16px 20px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 10px; }
+  .modal-title { font-size: 16px; font-weight: 800; flex: 1; }
+  .modal-close { background: none; border: none; color: var(--muted); font-size: 20px; cursor: pointer; padding: 0 4px; line-height: 1; }
+  .modal-close:hover { color: var(--text); }
+  .modal-body { overflow-y: auto; padding: 16px 20px; display: flex; flex-direction: column; gap: 16px; }
+  .modal-section { }
+  .modal-section-title { font-size: 10px; text-transform: uppercase; letter-spacing: 1px; color: var(--muted); font-weight: 700; margin-bottom: 8px; }
+  .modal-kv { display: grid; grid-template-columns: auto 1fr; gap: 4px 12px; font-size: 12px; }
+  .modal-key { color: var(--muted); white-space: nowrap; }
+  .modal-val { color: var(--text); word-break: break-word; }
+  .modal-activity { display: flex; flex-direction: column; gap: 6px; max-height: 280px; overflow-y: auto; }
+  .modal-act-item { background: var(--card); border-radius: 6px; padding: 8px 10px; font-size: 12px; border-left: 3px solid var(--blue); }
+  .modal-act-msg { color: var(--text); margin-top: 2px; }
+  .modal-act-time { font-size: 10px; color: var(--muted); margin-top: 2px; }
+  .modal-empty { color: var(--muted); font-size: 12px; font-style: italic; }
+  .status-pill { display: inline-flex; align-items: center; gap: 5px; background: var(--card); border-radius: 20px; padding: 3px 10px; font-size: 11px; font-weight: 700; }
+
+  /* Email log */
+  .email-log { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+  .email-filters { padding: 8px 12px; border-bottom: 1px solid var(--border); display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+  .email-filter-btn { font-size: 10px; background: var(--card); border: 1px solid var(--border); color: var(--muted); padding: 3px 8px; border-radius: 4px; cursor: pointer; }
+  .email-filter-btn.active { background: var(--blue); border-color: var(--blue); color: white; }
+  .email-list { flex: 1; overflow-y: auto; padding: 8px; display: flex; flex-direction: column; gap: 6px; }
+  .email-item { background: var(--card); border: 1px solid var(--border); border-radius: 6px; padding: 10px; font-size: 12px; cursor: pointer; transition: border-color .15s; }
+  .email-item:hover { border-color: var(--blue); }
+  .email-item.replied { border-left: 3px solid var(--green); }
+  .email-item.sent { border-left: 3px solid var(--blue); }
+  .email-meta { display: flex; justify-content: space-between; align-items: flex-start; gap: 6px; }
+  .email-biz { font-weight: 700; color: var(--text); }
+  .email-addr { font-size: 10px; color: var(--muted); margin-top: 1px; }
+  .email-tags { display: flex; gap: 4px; flex-shrink: 0; }
+  .email-tag { font-size: 9px; background: var(--border); padding: 2px 5px; border-radius: 3px; }
+  .email-tag.replied { background: rgba(34,197,94,.2); color: var(--green); }
+  .email-preview { color: var(--muted); font-size: 11px; margin-top: 5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .email-time { font-size: 10px; color: var(--muted); margin-top: 3px; }
+  .email-detail { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; margin: 8px; padding: 12px; font-size: 12px; display: flex; flex-direction: column; gap: 8px; }
+  .email-detail-header { display: flex; justify-content: space-between; align-items: center; }
+  .email-body-text { background: var(--card); border-radius: 6px; padding: 10px; white-space: pre-wrap; line-height: 1.6; font-size: 12px; max-height: 300px; overflow-y: auto; }
+  .email-close { background: none; border: none; color: var(--muted); cursor: pointer; font-size: 16px; line-height: 1; }
+  .email-close:hover { color: var(--text); }
+
+  /* Mobile nav */
+  .mobile-nav { display: none; }
+
+  @media (max-width: 900px) {
+    .app { grid-template-rows: auto auto 1fr; }
+    .main {
+      grid-template-columns: 1fr;
+      grid-template-rows: 1fr;
+      height: calc(100vh - 160px);
+      overflow: hidden;
+    }
+    .left-col, .center-col, .right-col {
+      display: none;
+      height: 100%;
+      min-height: 0;
+    }
+    .left-col.mob-active, .center-col.mob-active, .right-col.mob-active {
+      display: flex;
+    }
+    .center-col.mob-active { display: flex; flex-direction: column; }
+    .mobile-nav {
+      display: flex;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 0;
+    }
+    .mob-tab {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 10px 4px 12px;
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .5px;
+      color: var(--muted);
+      background: none;
+      border: none;
+      cursor: pointer;
+      gap: 4px;
+      transition: color .15s;
+    }
+    .mob-tab.active { color: var(--cyan); }
+    .mob-tab-icon { font-size: 18px; line-height: 1; }
+  }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const { useState, useEffect, useRef, useCallback } = React;
+
+const API = '';
+const REFRESH = 30000;
+const MILESTONES = [500, 1000, 2500, 5000];
+const STAGES = ['scraped','emailed','opened','replied','booked','paid','delivered','active_client'];
+
+function ago(ts) {
+  if (!ts) return '';
+  const d = new Date(ts.endsWith('Z') ? ts : ts + 'Z');
+  const secs = Math.floor((Date.now() - d) / 1000);
+  if (secs < 60) return `${secs}s ago`;
+  if (secs < 3600) return `${Math.floor(secs/60)}m ago`;
+  if (secs < 86400) return `${Math.floor(secs/3600)}h ago`;
+  return `${Math.floor(secs/86400)}d ago`;
+}
+
+function fmt(n) {
+  return typeof n === 'number' ? n.toLocaleString('en-US', {minimumFractionDigits: 0, maximumFractionDigits: 2}) : n || '—';
+}
+
+function HealthBar({ metrics, agents, alerts, alertCount, onRefresh, refreshing, onAckAll }) {
+  const online = agents.filter(a => a.status === 'online').length;
+  const nextMilestone = MILESTONES.find(m => m > (metrics.mrr || 0)) || 10000;
+  const pct = Math.min(100, ((metrics.mrr || 0) / nextMilestone) * 100);
+  const [showAlerts, setShowAlerts] = React.useState(false);
+  const bellRef = useRef(null);
+
+  useEffect(() => {
+    if (!showAlerts) return;
+    const close = e => { if (bellRef.current && !bellRef.current.contains(e.target)) setShowAlerts(false); };
+    document.addEventListener('mousedown', close);
+    return () => document.removeEventListener('mousedown', close);
+  }, [showAlerts]);
+
+  return (
+    <div className="health-bar">
+      <span className="hb-title">RINGCATCH</span>
+      <div className="hb-item">
+        <span className="hb-label">MRR</span>
+        <span className="hb-value" style={{color:'var(--green)'}}>${fmt(metrics.mrr || 0)}</span>
+      </div>
+      <div className="hb-item">
+        <span className="hb-label">Clients</span>
+        <span className="hb-value">{metrics.total_clients || 0}</span>
+      </div>
+      <div className="hb-item">
+        <span className="hb-label">Agents</span>
+        <span className="hb-value">
+          <span className={`dot dot-${online === agents.length ? 'green' : 'red'}`}/>
+          {online}/{agents.length}
+        </span>
+      </div>
+      <div className="hb-item">
+        <span className="hb-label">Emails Today</span>
+        <span className="hb-value">{metrics.emails_today || 0}/{metrics.email_limit || 300}</span>
+      </div>
+      <div className="hb-item">
+        <span className="hb-label">Leads Today</span>
+        <span className="hb-value">{metrics.leads_today || 0}</span>
+      </div>
+      <div className="hb-item">
+        <span className="hb-label">Reply Rate</span>
+        <span className="hb-value">{metrics.reply_rate || 0}%</span>
+      </div>
+      <div className="hb-item" style={{flex:1, maxWidth:200}}>
+        <span className="hb-label">MRR → ${nextMilestone} milestone</span>
+        <div className="progress-bar" style={{marginTop:4}}>
+          <div className="progress-fill" style={{width:`${pct}%`}}/>
+        </div>
+      </div>
+      <button className="refresh-btn" onClick={onRefresh} disabled={refreshing}>
+        {refreshing ? '↺ ...' : '↺ Refresh'}
+      </button>
+      <div className="alert-bell-wrap" ref={bellRef}>
+        <button className="alert-bell" title="Alerts" onClick={() => setShowAlerts(s => !s)}>
+          🔔{alertCount > 0 && <span className="alert-count">{alertCount}</span>}
+        </button>
+        {showAlerts && (
+          <div className="alert-dropdown">
+            <div className="alert-dropdown-header">
+              <span>Alerts ({alertCount})</span>
+              {alertCount > 0 && <button className="alert-ack-all" onClick={() => { onAckAll(); setShowAlerts(false); }}>Ack all</button>}
+            </div>
+            <div className="alert-dropdown-body">
+              {alerts.length === 0
+                ? <div className="alert-empty">No unacknowledged alerts</div>
+                : alerts.map(a => (
+                    <div key={a.id} className="alert-row">
+                      <div className="alert-row-top">
+                        <span className={`alert-row-sev ${a.severity || 'info'}`}>{a.severity || 'info'}</span>
+                        <span className="alert-row-time">{ago(a.timestamp)}</span>
+                      </div>
+                      <div className="alert-row-msg">{a.message}</div>
+                    </div>
+                  ))
+              }
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function AgentModal({ agent, activity, onClose }) {
+  const [detail, setDetail] = React.useState(null);
+  const [loadingDetail, setLoadingDetail] = React.useState(true);
+
+  React.useEffect(() => {
+    fetch(`/api/agent/${agent.name}/detail`)
+      .then(r => r.json())
+      .then(d => { setDetail(d); setLoadingDetail(false); })
+      .catch(() => setLoadingDetail(false));
+  }, [agent.name]);
+
+  const data = (detail && detail.data) || agent.data || {};
+  const stats = (detail && detail.stats) || {};
+  const logs = (detail && detail.logs) || [];
+  const liveStatus = detail ? detail.status : agent.status;
+  const liveError = detail ? detail.error : agent.error;
+
+  const agentActivity = activity.filter(e =>
+    e.agent && (e.agent === agent.name || e.agent === agent.name.replace('agency-',''))
+  ).slice(0, 20);
+
+  const statusColor = liveStatus === 'online' ? 'var(--green)' : liveStatus === 'offline' ? 'var(--red)' : 'var(--yellow)';
+
+  const allKv = {...data, ...stats};
+  const kvPairs = Object.entries(allKv).filter(([k, v]) => v !== null && v !== undefined && v !== '' && k !== 'agent');
+
+  return (
+    <div className="modal-overlay" onClick={e => e.target.classList.contains('modal-overlay') && onClose()}>
+      <div className="modal">
+        <div className="modal-header">
+          <span className="dot" style={{background: statusColor, width:10, height:10}}/>
+          <span className="modal-title">{agent.name.replace('agency-','')}</span>
+          <span className="status-pill" style={{color: statusColor}}>{liveStatus.toUpperCase()}</span>
+          {loadingDetail && <span style={{fontSize:11,color:'var(--muted)'}}>fetching…</span>}
+          <button className="modal-close" onClick={onClose}>×</button>
+        </div>
+        <div className="modal-body">
+          {liveStatus === 'offline' && liveError && (
+            <div style={{background:'rgba(239,68,68,.1)',border:'1px solid var(--red)',borderRadius:8,padding:'10px 12px',fontSize:12,color:'var(--red)'}}>
+              ⚠ {liveError}
+            </div>
+          )}
+
+          {allKv.model && (
+            <div style={{background:'rgba(59,130,246,.1)',border:'1px solid rgba(59,130,246,.3)',borderRadius:8,padding:'8px 12px',fontSize:12,display:'flex',alignItems:'center',gap:8}}>
+              <span style={{color:'var(--blue)',fontWeight:700,fontSize:10,textTransform:'uppercase',letterSpacing:'1px',whiteSpace:'nowrap'}}>Model</span>
+              <span style={{color:'var(--text)',fontFamily:'monospace'}}>{String(allKv.model)}</span>
+            </div>
+          )}
+
+          {kvPairs.filter(([k])=>k!=='model').length > 0 && (
+            <div className="modal-section">
+              <div className="modal-section-title">Stats</div>
+              <div className="modal-kv">
+                {kvPairs.filter(([k])=>k!=='model').map(([k, v]) => (
+                  <React.Fragment key={k}>
+                    <span className="modal-key">{k.replace(/_/g,' ')}</span>
+                    <span className="modal-val">{typeof v === 'object' ? JSON.stringify(v) : String(v)}</span>
+                  </React.Fragment>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {agentActivity.length > 0 && (
+            <div className="modal-section">
+              <div className="modal-section-title">Recent Activity ({agentActivity.length})</div>
+              <div className="modal-activity">
+                {agentActivity.map((e, i) => (
+                  <div key={e.id || i} className="modal-act-item" style={{borderLeftColor: e.color === 'red' ? 'var(--red)' : e.color === 'green' ? 'var(--green)' : e.color === 'orange' ? 'var(--orange)' : 'var(--blue)'}}>
+                    <div className="modal-act-msg">{e.message}</div>
+                    <div className="modal-act-time">{ago(e.timestamp)}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {logs.length > 0 && (
+            <div className="modal-section">
+              <div className="modal-section-title">Recent Logs (30 min)</div>
+              <div style={{background:'var(--bg)',borderRadius:6,padding:'8px 10px',fontFamily:'monospace',fontSize:11,lineHeight:1.6,overflowX:'auto',maxHeight:200,overflowY:'auto'}}>
+                {logs.map((l, i) => <div key={i} style={{color: l.includes('ERROR') || l.includes('error') ? 'var(--red)' : l.includes('WARNING') || l.includes('warn') ? 'var(--yellow)' : 'var(--muted)'}}>{l}</div>)}
+              </div>
+            </div>
+          )}
+
+          {!loadingDetail && kvPairs.length === 0 && agentActivity.length === 0 && logs.length === 0 && (
+            <div className="modal-empty">No detail available for this agent.</div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function AgentCard({ agent, onSelect }) {
+  const data = agent.data || {};
+  return (
+    <div className={`agent-card ${agent.status}`} onClick={onSelect} title="Click for details">
+      <div style={{display:'flex',justifyContent:'space-between',alignItems:'center'}}>
+        <span className="agent-name">{agent.name.replace('agency-','')}</span>
+        <span className={`dot dot-${agent.status === 'online' ? 'green' : 'red'}`}/>
+      </div>
+      <div className="agent-action">{data.last_action || (agent.status === 'offline' ? '⚠ offline' : 'idle')}</div>
+      <div className="agent-meta">
+        {data.actions_today !== undefined && <span className="badge">{data.actions_today} today</span>}
+        {data.alerts_active > 0 && <span className="badge" style={{color:'var(--red)'}}>{data.alerts_active} alerts</span>}
+        {agent.last_check && <span className="badge" style={{color:'var(--muted)'}}>{ago(agent.last_check)}</span>}
+      </div>
+    </div>
+  );
+}
+
+function AgentPanel({ agents, activity, className }) {
+  const [selected, setSelected] = React.useState(null);
+  return (
+    <div className={className || "left-col"}>
+      <div className="col-title">Agent Status</div>
+      {agents.map(a => <AgentCard key={a.name} agent={a} onSelect={() => setSelected(a)}/>)}
+      {selected && <AgentModal agent={selected} activity={activity} onClose={() => setSelected(null)}/>}
+    </div>
+  );
+}
+
+function RevenueChart({ revenue }) {
+  const canvasRef = useRef(null);
+  const chartRef = useRef(null);
+  useEffect(() => {
+    if (!canvasRef.current || !revenue.monthly) return;
+    if (chartRef.current) chartRef.current.destroy();
+    const months = [...(revenue.monthly || [])].reverse();
+    chartRef.current = new Chart(canvasRef.current, {
+      type: 'line',
+      data: {
+        labels: months.map(m => m.month || ''),
+        datasets: [
+          { label: 'MRR Income', data: months.map(m => m.mrr_income || 0), borderColor: '#3b82f6', tension: .4, fill: true, backgroundColor: 'rgba(59,130,246,.1)' },
+          { label: 'Setup Fees', data: months.map(m => m.setup_income || 0), borderColor: '#22c55e', tension: .4 }
+        ]
+      },
+      options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { labels: { color: '#8892a4', font: { size: 11 } } } }, scales: { x: { ticks: { color: '#8892a4', font: { size: 10 } }, grid: { color: '#2d3448' } }, y: { ticks: { color: '#8892a4', font: { size: 10 }, callback: v => '$' + v }, grid: { color: '#2d3448' } } } }
+    });
+    return () => chartRef.current?.destroy();
+  }, [revenue]);
+  return <canvas ref={canvasRef} />;
+}
+
+function RevenueTracker({ metrics, revenue }) {
+  const mrr = metrics.mrr || 0;
+  return (
+    <div className="card">
+      <div className="card-title">Revenue Tracker</div>
+      <div className="revenue-grid">
+        <div className="rev-stat"><div className="rev-label">MRR</div><div className="rev-value">${fmt(mrr)}</div></div>
+        <div className="rev-stat"><div className="rev-label">ARR</div><div className="rev-value" style={{color:'var(--cyan)'}}>${fmt(mrr*12)}</div></div>
+        <div className="rev-stat"><div className="rev-label">Next Month (est.)</div><div className="rev-value" style={{color:'var(--purple)'}}>${fmt(mrr*1.05)}</div></div>
+      </div>
+      <div className="chart-container"><RevenueChart revenue={revenue}/></div>
+    </div>
+  );
+}
+
+function Pipeline({ pipeline }) {
+  return (
+    <div className="card">
+      <div className="card-title">Pipeline</div>
+      <div className="kanban">
+        {STAGES.map(s => {
+          const d = pipeline[s] || {count:0,value:0};
+          return (
+            <div className="kanban-col" key={s}>
+              <div className="kanban-stage">{s.replace('_',' ')}</div>
+              <div className="kanban-count">{d.count}</div>
+              {d.value > 0 && <div className="kanban-val">${fmt(d.value)}</div>}
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+function ClientRoster({ clients }) {
+  return (
+    <div className="card">
+      <div className="card-title">Active Clients ({clients.length})</div>
+      <div style={{overflowX:'auto'}}>
+        <table className="client-table">
+          <thead>
+            <tr><th>Business</th><th>Niche</th><th>City</th><th>Setup</th><th>Churn Risk</th><th>Convos</th></tr>
+          </thead>
+          <tbody>
+            {clients.length === 0 && <tr><td colSpan={6} style={{color:'var(--muted)',textAlign:'center',padding:'20px'}}>No active clients yet</td></tr>}
+            {clients.map(c => (
+              <tr key={c.id}>
+                <td style={{fontWeight:600}}>{c.business_name}</td>
+                <td style={{color:'var(--muted)'}}>{c.niche}</td>
+                <td style={{color:'var(--muted)'}}>{c.city}</td>
+                <td style={{color:'var(--muted)'}}>{c.setup_date?.slice(0,10)}</td>
+                <td className={`churn-${c.churn_risk}`}>{c.churn_risk}</td>
+                <td>{c.chatbot_conversations || 0}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
+
+function ActivityFeed({ events }) {
+  return (
+    <div style={{flex:1,display:'flex',flexDirection:'column',overflow:'hidden'}}>
+      <div className="feed-header">
+        <span style={{fontWeight:700,fontSize:12,textTransform:'uppercase',letterSpacing:'1px',color:'var(--muted)'}}>Live Activity</span>
+        <span style={{fontSize:11,color:'var(--muted)'}}>{events.length} events</span>
+      </div>
+      <div className="feed-scroll">
+        {events.length === 0 && <div style={{color:'var(--muted)',textAlign:'center',padding:'20px',fontSize:12}}>Waiting for activity...</div>}
+        {events.map((e,i) => (
+          <div key={e.id || i} className={`feed-item color-${e.color || 'blue'}`}>
+            <div className="feed-agent">{e.agent}</div>
+            <div className="feed-msg">{e.message}</div>
+            <div className="feed-time">{ago(e.timestamp)}</div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function ChatPanel() {
+  const [messages, setMessages] = React.useState([
+    {role:'system', content:'Ask me anything about the business — leads, revenue, pipeline, or strategy. Use the 🎤 button to speak.'}
+  ]);
+  const [input, setInput] = React.useState('');
+  const [loading, setLoading] = React.useState(false);
+  const [sessionId, setSessionId] = React.useState('dashboard-' + Math.random().toString(36).slice(2));
+  const [recording, setRecording] = React.useState(false);
+  const bottomRef = useRef(null);
+  const recorderRef = useRef(null);
+  const chunksRef = useRef([]);
+
+  useEffect(() => { bottomRef.current?.scrollIntoView({behavior:'smooth'}); }, [messages]);
+
+  const send = async () => {
+    const text = input.trim();
+    if (!text || loading) return;
+    setInput('');
+    setMessages(prev => [...prev, {role:'user', content:text}]);
+    setLoading(true);
+    try {
+      const resp = await fetch('/api/chat', {
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({message:text, session_id:sessionId})
+      });
+      const data = await resp.json();
+      setMessages(prev => [...prev, {role:'assistant', content:data.response || 'No response.'}]);
+    } catch(e) {
+      setMessages(prev => [...prev, {role:'assistant', content:`Error: ${e.message}`}]);
+    } finally { setLoading(false); }
+  };
+
+  const startRecording = async () => {
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      alert('Voice requires a secure connection (HTTPS).\nPlease use https://dashboard.ringcatch.io instead of the local IP.');
+      return;
+    }
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({audio:true});
+      chunksRef.current = [];
+      const recorder = new MediaRecorder(stream, {mimeType:'audio/webm'});
+      recorder.ondataavailable = e => { if(e.data.size > 0) chunksRef.current.push(e.data); };
+      recorder.onstop = async () => {
+        stream.getTracks().forEach(t => t.stop());
+        const blob = new Blob(chunksRef.current, {type:'audio/webm'});
+        setLoading(true);
+        setMessages(prev => [...prev, {role:'system', content:'🎤 Processing voice...'}]);
+        try {
+          const fd = new FormData();
+          fd.append('audio', blob, 'audio.webm');
+          fd.append('session_id', sessionId);
+          const resp = await fetch('/api/voice', {method:'POST', body:fd});
+          if (!resp.ok) { throw new Error(await resp.text()); }
+          const transcript = resp.headers.get('X-Transcript') || '';
+          const reply = resp.headers.get('X-Reply') || '';
+          // Replace the "Processing..." message with the real transcript
+          setMessages(prev => {
+            const updated = [...prev];
+            const idx = updated.map(m => m.content).lastIndexOf('🎤 Processing voice...');
+            if(idx >= 0) updated[idx] = {role:'user', content:`🎤 ${transcript}`};
+            return [...updated, {role:'assistant', content:reply}];
+          });
+          // Play audio
+          const audioBlob = await resp.clone().blob();
+          const url = URL.createObjectURL(audioBlob);
+          new Audio(url).play();
+        } catch(e) {
+          setMessages(prev => prev.filter(m => m.content !== '🎤 Processing voice...').concat([
+            {role:'assistant', content:`Voice error: ${e.message}`}
+          ]));
+        } finally { setLoading(false); }
+      };
+      recorderRef.current = recorder;
+      recorder.start();
+      setRecording(true);
+    } catch(e) {
+      alert('Microphone access denied: ' + e.message);
+    }
+  };
+
+  const stopRecording = () => {
+    recorderRef.current?.stop();
+    setRecording(false);
+  };
+
+  const onKey = e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(); } };
+
+  return (
+    <div className="chat-panel">
+      <div className="chat-messages">
+        {messages.map((m,i) => (
+          <div key={i} className={`chat-msg ${m.role}`}>{m.content}</div>
+        ))}
+        {loading && !recording && <div className="chat-thinking">Thinking...</div>}
+        <div ref={bottomRef}/>
+      </div>
+      <div className="chat-input-row">
+        <button
+          className={`mic-btn ${recording ? 'recording' : ''}`}
+          onMouseDown={startRecording} onMouseUp={stopRecording}
+          onTouchStart={startRecording} onTouchEnd={stopRecording}
+          disabled={loading && !recording}
+          title="Hold to speak"
+        >{recording ? '⏹' : '🎤'}</button>
+        <textarea className="chat-input" value={input} onChange={e=>setInput(e.target.value)} onKeyDown={onKey} placeholder="Type or hold 🎤 to speak..." rows={1}/>
+        <button className="chat-send" onClick={send} disabled={loading || !input.trim()}>Send</button>
+      </div>
+    </div>
+  );
+}
+
+function EmailLog() {
+  const [emails, setEmails] = React.useState([]);
+  const [stepFilter, setStepFilter] = React.useState(null);
+  const [selected, setSelected] = React.useState(null);
+  const [loading, setLoading] = React.useState(true);
+
+  const load = async (step) => {
+    setLoading(true);
+    try {
+      const url = step != null ? `/api/emails?limit=200&step=${step}` : '/api/emails?limit=200';
+      const data = await fetch(url).then(r => r.json());
+      setEmails(data);
+    } catch(e) { console.error(e); }
+    finally { setLoading(false); }
+  };
+
+  React.useEffect(() => { load(stepFilter); }, [stepFilter]);
+
+  const setFilter = (s) => { setStepFilter(s); setSelected(null); };
+
+  const replied = emails.filter(e => e.replied).length;
+
+  return (
+    <div className="email-log">
+      <div className="email-filters">
+        <button className={`email-filter-btn ${stepFilter===null?'active':''}`} onClick={()=>setFilter(null)}>All ({emails.length})</button>
+        <button className={`email-filter-btn ${stepFilter===1?'active':''}`} onClick={()=>setFilter(1)}>Step 1</button>
+        <button className={`email-filter-btn ${stepFilter===2?'active':''}`} onClick={()=>setFilter(2)}>Step 2</button>
+        <button className={`email-filter-btn ${stepFilter===3?'active':''}`} onClick={()=>setFilter(3)}>Step 3</button>
+        {replied > 0 && <span style={{fontSize:10,color:'var(--green)',marginLeft:'auto'}}>{replied} replied</span>}
+      </div>
+      {selected && (
+        <div className="email-detail">
+          <div className="email-detail-header">
+            <div>
+              <div style={{fontWeight:700}}>{selected.business_name || selected.email}</div>
+              <div style={{fontSize:10,color:'var(--muted)'}}>{selected.email} · {selected.city} · {selected.niche}</div>
+            </div>
+            <button className="email-close" onClick={()=>setSelected(null)}>×</button>
+          </div>
+          <div style={{display:'flex',gap:6,fontSize:10}}>
+            <span className="email-tag">Step {selected.sequence_step}</span>
+            {selected.replied ? <span className="email-tag replied">Replied</span> : <span className="email-tag">Sent</span>}
+            <span style={{color:'var(--muted)'}}>{selected.sent_at?.slice(0,16)}</span>
+          </div>
+          <div className="email-body-text">{selected.email_body || '(no body saved)'}</div>
+        </div>
+      )}
+      <div className="email-list">
+        {loading && <div style={{color:'var(--muted)',textAlign:'center',padding:'20px',fontSize:12}}>Loading emails...</div>}
+        {!loading && emails.length === 0 && <div style={{color:'var(--muted)',textAlign:'center',padding:'20px',fontSize:12}}>No emails sent yet</div>}
+        {emails.map(e => (
+          <div key={e.id} className={`email-item ${e.replied ? 'replied' : 'sent'}`} onClick={()=>setSelected(selected?.id===e.id ? null : e)}>
+            <div className="email-meta">
+              <div>
+                <div className="email-biz">{e.business_name || e.email}</div>
+                <div className="email-addr">{e.email}</div>
+              </div>
+              <div className="email-tags">
+                <span className="email-tag">S{e.sequence_step}</span>
+                {e.replied && <span className="email-tag replied">↩</span>}
+              </div>
+            </div>
+            <div className="email-preview">{e.email_body?.slice(0, 100) || '—'}</div>
+            <div className="email-time">{e.sent_at?.slice(0, 16)} · {e.niche} · {e.city}</div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function AnalyticsPanel() {
+  const [data, setData] = React.useState(null);
+  const [loading, setLoading] = React.useState(true);
+  React.useEffect(() => {
+    fetch(`${API}/api/analytics`).then(r => r.json()).then(d => { setData(d); setLoading(false); }).catch(() => setLoading(false));
+  }, []);
+  if (loading) return <div style={{color:'var(--muted)',padding:20,fontSize:12}}>Loading analytics…</div>;
+  if (!data || data.error) return <div style={{color:'var(--muted)',padding:20,fontSize:12}}>No data yet — visits will appear here once ringcatch.io is live.</div>;
+
+  const funnel = data.chat_funnel || {};
+  const todayVisits = data.total_visits_today || 0;
+  const totalVisits = (data.daily||[]).reduce((s,d)=>s+d.visits,0);
+
+  return (
+    <div style={{padding:'12px 16px',overflowY:'auto',height:'100%'}}>
+
+      {/* Visit summary */}
+      <div style={{display:'flex',gap:12,marginBottom:16,flexWrap:'wrap'}}>
+        {[
+          {label:'Today', val: todayVisits},
+          {label:'30-day total', val: totalVisits},
+          {label:'Chat starts', val: funnel.total_starts||0},
+          {label:'Demo seen', val: funnel.demo_seen||0},
+          {label:'Close reached', val: funnel.close_reached||0},
+          {label:'Emails captured', val: funnel.emails_captured||0},
+        ].map(({label,val})=>(
+          <div key={label} style={{background:'var(--card)',border:'1px solid var(--border)',borderRadius:8,padding:'10px 14px',minWidth:90}}>
+            <div style={{fontSize:10,color:'var(--muted)',textTransform:'uppercase',fontWeight:700}}>{label}</div>
+            <div style={{fontSize:20,fontWeight:900,color:'var(--cyan)',lineHeight:1.2,marginTop:4}}>{val}</div>
+          </div>
+        ))}
+      </div>
+
+      {/* Traffic sources */}
+      {(data.sources||[]).length > 0 && (
+        <div style={{marginBottom:16}}>
+          <div style={{fontSize:11,fontWeight:700,textTransform:'uppercase',color:'var(--muted)',marginBottom:8}}>Traffic Sources</div>
+          {data.sources.map(s=>{
+            const total = (data.sources||[]).reduce((sum,x)=>sum+x.visits,0);
+            const pct = total ? Math.round(s.visits/total*100) : 0;
+            return (
+              <div key={s.source} style={{display:'flex',alignItems:'center',gap:8,marginBottom:6}}>
+                <div style={{width:70,fontSize:11,color:'var(--text)',textTransform:'capitalize'}}>{s.source}</div>
+                <div style={{flex:1,background:'var(--border)',borderRadius:4,height:6}}>
+                  <div style={{width:`${pct}%`,background:'var(--cyan)',borderRadius:4,height:6}}/>
+                </div>
+                <div style={{fontSize:11,color:'var(--muted)',width:50,textAlign:'right'}}>{s.visits} ({pct}%)</div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {/* Pages */}
+      {(data.pages||[]).length > 0 && (
+        <div style={{marginBottom:16}}>
+          <div style={{fontSize:11,fontWeight:700,textTransform:'uppercase',color:'var(--muted)',marginBottom:8}}>Pages</div>
+          {data.pages.map(p=>(
+            <div key={p.page} style={{display:'flex',justifyContent:'space-between',fontSize:11,padding:'4px 0',borderBottom:'1px solid var(--border)'}}>
+              <span style={{color:'var(--text)'}}>{p.page || '/'}</span>
+              <span style={{color:'var(--cyan)'}}>{p.visits} visits</span>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Recent chat sessions */}
+      {(data.recent_chats||[]).length > 0 && (
+        <div>
+          <div style={{fontSize:11,fontWeight:700,textTransform:'uppercase',color:'var(--muted)',marginBottom:8}}>Recent Chat Sessions</div>
+          {data.recent_chats.slice(0,20).map(c=>(
+            <div key={c.session_id} style={{background:'var(--card)',border:'1px solid var(--border)',borderRadius:6,padding:'8px 10px',marginBottom:6,fontSize:11}}>
+              <div style={{display:'flex',justifyContent:'space-between'}}>
+                <span style={{fontWeight:700,color:'var(--text)'}}>{c.business_name || c.name || 'Unknown'}</span>
+                <span style={{color:'var(--muted)'}}>{(c.started_at||'').slice(0,16)}</span>
+              </div>
+              <div style={{color:'var(--muted)',marginTop:2}}>{c.industry} · Phase {c.phase_reached}
+                {c.demo_seen ? <span style={{color:'var(--cyan)',marginLeft:6}}>✓ Demo</span> : ''}
+                {c.close_reached ? <span style={{color:'#f59e0b',marginLeft:6}}>✓ Close</span> : ''}
+                {c.converted ? <span style={{color:'var(--green)',marginLeft:6}}>✓ Converted</span> : ''}
+                {c.email_captured ? <span style={{color:'var(--green)',marginLeft:6}}>📧 {c.email_captured}</span> : ''}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function RightPanel({ events, className }) {
+  const [tab, setTab] = React.useState('activity');
+  return (
+    <div className={className || "right-col"}>
+      <div className="right-tabs">
+        <button className={`right-tab ${tab==='activity'?'active':''}`} onClick={()=>setTab('activity')}>Activity</button>
+        <button className={`right-tab ${tab==='chat'?'active':''}`} onClick={()=>setTab('chat')}>Chat</button>
+        <button className={`right-tab ${tab==='emails'?'active':''}`} onClick={()=>setTab('emails')}>Emails</button>
+        <button className={`right-tab ${tab==='analytics'?'active':''}`} onClick={()=>setTab('analytics')}>Analytics</button>
+      </div>
+      {tab === 'activity' && <ActivityFeed events={events}/>}
+      {tab === 'chat' && <ChatPanel/>}
+      {tab === 'emails' && <EmailLog/>}
+      {tab === 'analytics' && <AnalyticsPanel/>}
+    </div>
+  );
+}
+
+function App() {
+  const [metrics, setMetrics] = useState({});
+  const [agents, setAgents] = useState([]);
+  const [pipeline, setPipeline] = useState({});
+  const [clients, setClients] = useState([]);
+  const [activity, setActivity] = useState([]);
+  const [revenue, setRevenue] = useState({});
+  const [alerts, setAlerts] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [mobPanel, setMobPanel] = useState('dashboard');
+  const wsRef = useRef(null);
+  const reconnectRef = useRef(null);
+
+  const fetchAll = useCallback(async () => {
+    setRefreshing(true);
+    try {
+      const [m, a, p, c, act, r, al] = await Promise.all([
+        fetch(`${API}/api/metrics`).then(r => r.json()),
+        fetch(`${API}/api/agents`).then(r => r.json()),
+        fetch(`${API}/api/pipeline`).then(r => r.json()),
+        fetch(`${API}/api/clients`).then(r => r.json()),
+        fetch(`${API}/api/activity?limit=50`).then(r => r.json()),
+        fetch(`${API}/api/revenue`).then(r => r.json()),
+        fetch(`${API}/api/alerts/unacknowledged`).then(r => r.json()),
+      ]);
+      setMetrics(m); setAgents(a); setPipeline(p);
+      setClients(c); setActivity(act); setRevenue(r); setAlerts(al);
+    } catch(e) { console.error('Fetch failed:', e); }
+    finally { setLoading(false); setRefreshing(false); }
+  }, []);
+
+  const connectWS = useCallback(() => {
+    if (wsRef.current && wsRef.current.readyState < 2) return; // already open/connecting
+    const proto = location.protocol === 'https:' ? 'wss' : 'ws';
+    const ws = new WebSocket(`${proto}://${location.host}/ws/live`);
+    wsRef.current = ws;
+    ws.onmessage = e => {
+      try {
+        const event = JSON.parse(e.data);
+        setActivity(prev => [event, ...prev].slice(0, 200));
+      } catch {}
+    };
+    ws.onclose = () => {
+      reconnectRef.current = setTimeout(() => { fetchAll(); connectWS(); }, 5000);
+    };
+  }, [fetchAll]);
+
+  useEffect(() => {
+    fetchAll();
+    connectWS();
+    const timer = setInterval(fetchAll, REFRESH);
+    return () => {
+      clearInterval(timer);
+      clearTimeout(reconnectRef.current);
+      wsRef.current?.close();
+    };
+  }, [fetchAll, connectWS]);
+
+  if (loading) {
+    return <div style={{display:'flex',alignItems:'center',justifyContent:'center',height:'100vh',color:'var(--muted)'}}>Loading RingCatch Command...</div>;
+  }
+
+  return (
+    <div className="app">
+      <HealthBar metrics={metrics} agents={agents} alerts={alerts} alertCount={alerts.length} onRefresh={fetchAll} refreshing={refreshing} onAckAll={async () => {
+        await Promise.all(alerts.map(a => fetch('/api/alerts/acknowledge', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({alert_id: a.id})})));
+        fetchAll();
+      }}/>
+      <nav className="mobile-nav">
+        <button className={`mob-tab${mobPanel==='agents'?' active':''}`} onClick={()=>setMobPanel('agents')}>
+          <span className="mob-tab-icon">🤖</span>Agents
+        </button>
+        <button className={`mob-tab${mobPanel==='dashboard'?' active':''}`} onClick={()=>setMobPanel('dashboard')}>
+          <span className="mob-tab-icon">📊</span>Dashboard
+        </button>
+        <button className={`mob-tab${mobPanel==='feed'?' active':''}`} onClick={()=>setMobPanel('feed')}>
+          <span className="mob-tab-icon">💬</span>Feed
+        </button>
+      </nav>
+      <div className="main">
+        <AgentPanel agents={agents} activity={activity} className={`left-col${mobPanel==='agents'?' mob-active':''}`}/>
+        <div className={`center-col${mobPanel==='dashboard'?' mob-active':''}`}>
+          <RevenueTracker metrics={metrics} revenue={revenue}/>
+          <Pipeline pipeline={pipeline}/>
+          <ClientRoster clients={clients}/>
+        </div>
+        <RightPanel events={activity} className={`right-col${mobPanel==='feed'?' mob-active':''}`}/>
+      </div>
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+</script>
+</body>
+</html>

@@ -1,0 +1,225 @@
+{
+  "version": "0.1",
+  "name": "Arctic Air HVAC Chatbot",
+  "niche": "HVAC",
+  "generated_at": "2026-05-16T10:04:52.788463",
+  "flows": [
+    {
+      "name": "main",
+      "startNode": "entry",
+      "nodes": [
+        {
+          "name": "entry",
+          "type": "standard",
+          "onEnter": [],
+          "onReceive": [
+            {
+              "type": "say",
+              "message": "Hi! I'm the virtual assistant for Arctic Air HVAC. How can I help you today?"
+            }
+          ],
+          "next": [
+            {
+              "condition": "true",
+              "node": "faq_router"
+            }
+          ]
+        },
+        {
+          "name": "faq_router",
+          "type": "standard",
+          "onEnter": [],
+          "onReceive": [],
+          "next": [
+            {
+              "condition": "true",
+              "node": "fallback"
+            }
+          ]
+        },
+        {
+          "name": "fallback",
+          "type": "standard",
+          "onEnter": [],
+          "onReceive": [
+            {
+              "type": "say",
+              "message": "Let me get a team member for you. Call us at 704-555-0182 or leave your name and we'll call you right back."
+            }
+          ],
+          "next": []
+        },
+        {
+          "name": "faq_0",
+          "type": "standard",
+          "onEnter": [],
+          "onReceive": [
+            {
+              "type": "say",
+              "message": "Yes, Arctic Air HVAC provides 24/7 emergency heating and cooling repairs throughout Charlotte."
+            }
+          ],
+          "next": [
+            {
+              "condition": "true",
+              "node": "faq_router"
+            }
+          ]
+        },
+        {
+          "name": "faq_1",
+          "type": "standard",
+          "onEnter": [],
+          "onReceive": [
+            {
+              "type": "say",
+              "message": "We serve the entire Charlotte, NC metro area and surrounding communities."
+            }
+          ],
+          "next": [
+            {
+              "condition": "true",
+              "node": "faq_router"
+            }
+          ]
+        },
+        {
+          "name": "faq_2",
+          "type": "standard",
+          "onEnter": [],
+          "onReceive": [
+            {
+              "type": "say",
+              "message": "Yes, all of our technicians are fully licensed, bonded, and insured for your protection."
+            }
+          ],
+          "next": [
+            {
+              "condition": "true",
+              "node": "faq_router"
+            }
+          ]
+        },
+        {
+          "name": "faq_3",
+          "type": "standard",
+          "onEnter": [],
+          "onReceive": [
+            {
+              "type": "say",
+              "message": "Yes, we offer comprehensive maintenance agreements to optimize your system's efficiency and lifespan."
+            }
+          ],
+          "next": [
+            {
+              "condition": "true",
+              "node": "faq_router"
+            }
+          ]
+        },
+        {
+          "name": "faq_4",
+          "type": "standard",
+          "onEnter": [],
+          "onReceive": [
+            {
+              "type": "say",
+              "message": "Yes, Arctic Air HVAC provides expert heating and air conditioning services for both homes and businesses."
+            }
+          ],
+          "next": [
+            {
+              "condition": "true",
+              "node": "faq_router"
+            }
+          ]
+        },
+        {
+          "name": "faq_5",
+          "type": "standard",
+          "onEnter": [],
+          "onReceive": [
+            {
+              "type": "say",
+              "message": "Costs vary depending on your specific needs; we provide free, transparent estimates for all new installations."
+            }
+          ],
+          "next": [
+            {
+              "condition": "true",
+              "node": "faq_router"
+            }
+          ]
+        },
+        {
+          "name": "faq_6",
+          "type": "standard",
+          "onEnter": [],
+          "onReceive": [
+            {
+              "type": "say",
+              "message": "Yes, we offer various air purification solutions, including advanced filtration and UV light systems."
+            }
+          ],
+          "next": [
+            {
+              "condition": "true",
+              "node": "faq_router"
+            }
+          ]
+        },
+        {
+          "name": "faq_7",
+          "type": "standard",
+          "onEnter": [],
+          "onReceive": [
+            {
+              "type": "say",
+              "message": "We provide detailed, upfront estimates following a thorough inspection of your HVAC system."
+            }
+          ],
+          "next": [
+            {
+              "condition": "true",
+              "node": "faq_router"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "faq_pairs": [
+    {
+      "q": "Do you offer emergency services?",
+      "a": "Yes, Arctic Air HVAC provides 24/7 emergency heating and cooling repairs throughout Charlotte."
+    },
+    {
+      "q": "What areas do you serve?",
+      "a": "We serve the entire Charlotte, NC metro area and surrounding communities."
+    },
+    {
+      "q": "Are your technicians licensed and insured?",
+      "a": "Yes, all of our technicians are fully licensed, bonded, and insured for your protection."
+    },
+    {
+      "q": "Do you offer seasonal maintenance plans?",
+      "a": "Yes, we offer comprehensive maintenance agreements to optimize your system's efficiency and lifespan."
+    },
+    {
+      "q": "Do you service both residential and commercial clients?",
+      "a": "Yes, Arctic Air HVAC provides expert heating and air conditioning services for both homes and businesses."
+    },
+    {
+      "q": "How much does a new HVAC installation cost?",
+      "a": "Costs vary depending on your specific needs; we provide free, transparent estimates for all new installations."
+    },
+    {
+      "q": "Can you help improve my indoor air quality?",
+      "a": "Yes, we offer various air purification solutions, including advanced filtration and UV light systems."
+    },
+    {
+      "q": "Do you provide free estimates for repairs?",
+      "a": "We provide detailed, upfront estimates following a thorough inspection of your HVAC system."
+    }
+  ]
+}
