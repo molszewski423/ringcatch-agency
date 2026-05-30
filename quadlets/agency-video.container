@@ -1,0 +1,18 @@
+[Unit]
+Description=Agency video generation agent
+After=agency-kokoro.service agency-pod-pod.service
+Requires=agency-pod-pod.service
+
+[Container]
+Image=localhost/agency-video:latest
+ContainerName=agency-video
+Pod=agency-pod.pod
+Volume=agency-data:/data:Z
+EnvironmentFile=%h/agency/.env
+
+[Service]
+Restart=on-failure
+TimeoutStartSec=120
+
+[Install]
+WantedBy=default.target

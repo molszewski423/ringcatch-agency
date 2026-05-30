@@ -1,0 +1,19 @@
+[Unit]
+Description=Agency Orchestrator — gemma4:26b chat brain
+After=agency-support.service agency-pod-pod.service
+Requires=agency-pod-pod.service
+
+[Container]
+Image=localhost/agency-orchestrator:latest
+ContainerName=agency-orchestrator
+Pod=agency-pod.pod
+Volume=agency-data:/data:Z
+Volume=%h/agency/knowledge:/data/knowledge:Z
+EnvironmentFile=%h/agency/.env
+
+[Service]
+Restart=on-failure
+TimeoutStartSec=120
+
+[Install]
+WantedBy=default.target

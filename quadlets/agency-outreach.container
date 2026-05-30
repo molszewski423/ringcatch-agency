@@ -1,0 +1,19 @@
+[Unit]
+Description=Agency outreach agent (Ollama + Brevo)
+After=agency-pod-pod.service
+Requires=agency-pod-pod.service
+
+[Container]
+Image=localhost/agency-outreach:latest
+ContainerName=agency-outreach
+Pod=agency-pod.pod
+
+Volume=agency-data:/data:Z
+EnvironmentFile=%h/agency/.env
+
+[Service]
+Restart=on-failure
+TimeoutStartSec=120
+
+[Install]
+WantedBy=default.target

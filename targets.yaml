@@ -1,0 +1,39 @@
+niches:
+  # Original high-volume service niches
+  - "HVAC contractor"
+  - "Plumbing"
+  - "Electrical contractor"
+  - "Roofing contractor"
+  - "Dental office"
+  - "Auto repair shop"
+  - "Landscaping company"
+  - "Cleaning service"
+  # Professional services
+  - "Law firm"
+  - "Insurance agency"
+  - "Accounting firm"
+  - "Property management company"
+  - "Real estate agent"
+  # Events and hospitality
+  - "Bakery"
+  - "Wedding venue"
+  # Health and fitness
+  - "Independent gym"
+  - "Personal training studio"
+
+cities:
+  - "Houston, TX"
+  - "Phoenix, AZ"
+  - "Chicago, IL"
+  - "Philadelphia, PA"
+  - "San Antonio, TX"
+  - "Dallas, TX"
+  - "Miami, FL"
+  - "Atlanta, GA"
+  - "Denver, CO"
+  - "Charlotte, NC"
+
+max_leads_per_day: 300
+leads_per_city: 15
+delay_min_seconds: 3
+delay_max_seconds: 9

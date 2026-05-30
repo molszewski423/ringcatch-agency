@@ -1,0 +1,25 @@
+[Unit]
+Description=Agency Google Maps lead scraper
+After=agency-pod-pod.service
+Requires=agency-pod-pod.service
+
+[Container]
+Image=localhost/agency-scraper:latest
+ContainerName=agency-scraper
+Pod=agency-pod.pod
+
+Volume=agency-data:/data:Z
+# targets.yaml is read from here; ro so the container never modifies it
+Volume=%h/agency/scraper:/config:Z,ro
+
+EnvironmentFile=%h/agency/.env
+
+# Playwright/Chromium needs this on SELinux hosts
+SecurityLabelDisable=true
+
+[Service]
+Restart=on-failure
+TimeoutStartSec=120
+
+[Install]
+WantedBy=default.target

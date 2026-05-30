@@ -1,0 +1,18 @@
+[Unit]
+Description=Agency bi agent
+After=agency-support.service agency-pod-pod.service
+Requires=agency-pod-pod.service
+
+[Container]
+Image=localhost/agency-bi:latest
+ContainerName=agency-bi
+Pod=agency-pod.pod
+Volume=agency-data:/data:Z
+EnvironmentFile=%h/agency/.env
+
+[Service]
+Restart=on-failure
+TimeoutStartSec=120
+
+[Install]
+WantedBy=default.target

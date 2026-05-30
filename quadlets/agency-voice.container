@@ -1,0 +1,18 @@
+[Unit]
+Description=Agency Voice — Speaches STT + TTS server
+After=agency-pod-pod.service
+Requires=agency-pod-pod.service
+
+[Container]
+Image=ghcr.io/speaches-ai/speaches:latest-cpu
+ContainerName=agency-voice
+Pod=agency-pod.pod
+Volume=agency-voice-data:/home/user/.cache:Z
+Environment=ALLOW_ORIGINS=["*"]
+
+[Service]
+Restart=on-failure
+TimeoutStartSec=180
+
+[Install]
+WantedBy=default.target

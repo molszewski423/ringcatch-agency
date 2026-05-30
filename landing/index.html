@@ -1,0 +1,811 @@
+<!DOCTYPE html>
+<html class="dark" lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RingCatch.io — #1 AI Chatbot for US Trade &amp; Service Businesses</title>
+  <meta name="description" content="Commercial-grade AI chatbots for US-based small businesses. RingCatch.io captures leads, answers questions, and books appointments 24/7. Trusted across America.">
+  <link rel="icon" type="image/svg+xml" href="/logo.svg">
+  <link rel="apple-touch-icon" href="/logo.svg">
+  <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    "name": "RingCatch.io",
+    "url": "https://ringcatch.io",
+    "logo": "https://ringcatch.io/logo.svg",
+    "areaServed": "US",
+    "description": "Leading AI Chatbot provider for trade and service businesses in the United States."
+  }
+  </script>
+  <style>
+    /* CSS vars for chat widget compatibility */
+    :root {
+      --bg: #0b0b14;
+      --bg-card: #111122;
+      --border: #1c1c30;
+      --accent: #22d3ee;
+      --accent-d: #0891b2;
+      --text: #e2e8f0;
+      --muted: #64748b;
+      --green: #4ade80;
+    }
+    body {
+      font-family: 'Manrope', sans-serif;
+      background-color: #0B0B14;
+      color: #e4e1ee;
+      overflow-x: hidden;
+    }
+    .glass-card {
+      background: rgba(17, 17, 34, 0.7);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(34, 211, 238, 0.1);
+      transition: all 0.3s ease;
+    }
+    .glass-card:hover {
+      border: 1px solid rgba(34, 211, 238, 0.3);
+      box-shadow: 0px 4px 20px rgba(34, 211, 238, 0.1);
+    }
+    .cyan-glow { text-shadow: 0 0 15px rgba(34, 211, 238, 0.5); }
+    .btn-primary-glow {
+      box-shadow: 0 0 20px rgba(34, 211, 238, 0.3);
+      transition: all 0.3s ease;
+    }
+    .btn-primary-glow:hover {
+      box-shadow: 0 0 30px rgba(34, 211, 238, 0.5);
+      transform: translateY(-2px);
+    }
+    .grid-pattern {
+      background-image: radial-gradient(circle at 2px 2px, rgba(34, 211, 238, 0.05) 1px, transparent 0);
+      background-size: 40px 40px;
+    }
+    .hero-gradient {
+      background: radial-gradient(circle at 50% 50%, rgba(34, 211, 238, 0.1) 0%, transparent 70%);
+    }
+    @keyframes typing {
+      0% { transform: translateY(0px); }
+      50% { transform: translateY(-5px); }
+      100% { transform: translateY(0px); }
+    }
+    .typing-dot { animation: typing 1s infinite ease-in-out; }
+    .typing-dot:nth-child(2) { animation-delay: 0.2s; }
+    .typing-dot:nth-child(3) { animation-delay: 0.4s; }
+
+    /* ── FAQ ── */
+    .faq-item { border-bottom: 1px solid var(--border); }
+    .faq-item:first-child { border-top: 1px solid var(--border); }
+    .faq-btn {
+      width: 100%; background: none; border: none; color: var(--text);
+      text-align: left; cursor: pointer; padding: 20px 0;
+      display: flex; align-items: center; justify-content: space-between; gap: 16px;
+    }
+    .faq-q { font-weight: 700; font-size: 1rem; flex: 1; font-family: 'Manrope', sans-serif; }
+    .faq-icon {
+      color: var(--accent); font-size: 1.4rem; font-weight: 300;
+      flex-shrink: 0; transition: transform 0.25s; line-height: 1;
+    }
+    .faq-item.open .faq-icon { transform: rotate(45deg); }
+    .faq-body { overflow: hidden; max-height: 0; transition: max-height 0.3s ease; }
+    .faq-item.open .faq-body { max-height: 200px; }
+    .faq-a { font-size: 0.9rem; color: var(--muted); line-height: 1.6; padding-bottom: 20px; }
+
+    /* ── Chat Widget ── */
+    #rc-bubble {
+      position: fixed; bottom: 96px; right: 24px; z-index: 9999;
+      width: 56px; height: 56px; border-radius: 50%;
+      background: transparent; border: none; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      box-shadow: 0 4px 20px rgba(34,211,238,.4);
+      transition: transform .2s, box-shadow .2s;
+      padding: 0;
+    }
+    @media (min-width: 768px) { #rc-bubble { bottom: 24px; } }
+    #rc-bubble:hover { transform: scale(1.08); box-shadow: 0 6px 28px rgba(34,211,238,.55); }
+    #rc-bubble > svg { width: 56px; height: 56px; border-radius: 50%; }
+    #rc-bubble .rc-badge {
+      position: absolute; top: -2px; right: -2px;
+      width: 16px; height: 16px; border-radius: 50%;
+      background: #ef4444; border: 2px solid var(--bg); display: none;
+    }
+    #rc-bubble .rc-badge.show { display: block; }
+    #rc-panel {
+      position: fixed; bottom: 162px; right: 24px; z-index: 9998;
+      width: 360px; max-width: calc(100vw - 32px);
+      background: #111122; border: 1px solid var(--border);
+      border-radius: 16px; box-shadow: 0 8px 40px rgba(0,0,0,.6);
+      display: flex; flex-direction: column;
+      transform: scale(.92) translateY(16px); opacity: 0;
+      pointer-events: none;
+      transition: transform .22s cubic-bezier(.34,1.56,.64,1), opacity .18s;
+      overflow: hidden;
+    }
+    @media (min-width: 768px) { #rc-panel { bottom: 90px; } }
+    #rc-panel.open { transform: scale(1) translateY(0); opacity: 1; pointer-events: all; }
+    .rc-header {
+      background: linear-gradient(135deg, #0891b2, #22d3ee);
+      padding: 14px 16px; display: flex; align-items: center; gap: 10px;
+    }
+    .rc-avatar {
+      width: 36px; height: 36px; border-radius: 50%;
+      flex-shrink: 0; overflow: hidden;
+      box-shadow: 0 0 0 2px rgba(255,255,255,.25);
+    }
+    .rc-header-text { flex: 1; min-width: 0; }
+    .rc-header-name { font-weight: 700; font-size: .95rem; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .rc-header-sub { font-size: .75rem; color: rgba(255,255,255,.75); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .rc-demo-badge {
+      display: none; align-items: center; gap: 5px;
+      background: rgba(0,0,0,.25); border: 1px solid rgba(255,255,255,.3);
+      border-radius: 999px; padding: 2px 9px; font-size: .68rem; font-weight: 700;
+      color: #fff; letter-spacing: .03em; white-space: nowrap;
+      animation: rc-demo-pulse 2s ease-in-out infinite;
+    }
+    .rc-demo-badge.active { display: flex; }
+    @keyframes rc-demo-pulse {
+      0%,100% { opacity: 1; } 50% { opacity: .65; }
+    }
+    #rc-chips {
+      display: flex; flex-wrap: wrap; gap: 7px;
+      padding: 2px 14px 12px; min-height: 0;
+    }
+    .rc-chip {
+      background: transparent;
+      border: 1px solid var(--accent);
+      color: var(--accent);
+      border-radius: 999px;
+      padding: 5px 13px;
+      font-size: 0.78rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background .15s, color .15s;
+      white-space: nowrap;
+      font-family: inherit;
+    }
+    .rc-chip:hover, .rc-chip:active {
+      background: var(--accent);
+      color: #0b0b14;
+    }
+    .rc-close {
+      background: none; border: none; cursor: pointer;
+      color: rgba(255,255,255,.8); font-size: 20px; padding: 0 4px; line-height: 1;
+    }
+    .rc-close:hover { color: #fff; }
+    #rc-messages {
+      flex: 1; overflow-y: auto; padding: 16px; display: flex;
+      flex-direction: column; gap: 10px; min-height: 280px; max-height: 380px;
+    }
+    #rc-messages::-webkit-scrollbar { width: 4px; }
+    #rc-messages::-webkit-scrollbar-track { background: transparent; }
+    #rc-messages::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+    .rc-msg { max-width: 82%; display: flex; flex-direction: column; }
+    .rc-msg.bot { align-self: flex-start; }
+    .rc-msg.user { align-self: flex-end; }
+    .rc-bubble-text {
+      padding: 10px 13px; border-radius: 14px; font-size: .875rem; line-height: 1.5; word-break: break-word;
+    }
+    .rc-msg.bot  .rc-bubble-text { background: #1c1c30; color: var(--text); border-bottom-left-radius: 4px; }
+    .rc-msg.user .rc-bubble-text { background: var(--accent); color: #0b0b14; font-weight: 500; border-bottom-right-radius: 4px; }
+    .rc-typing { display: flex; gap: 4px; padding: 12px 13px; background: #1c1c30; border-radius: 14px; border-bottom-left-radius: 4px; width: fit-content; }
+    .rc-typing span { width: 7px; height: 7px; border-radius: 50%; background: var(--muted); animation: rcbounce 1.2s infinite; }
+    .rc-typing span:nth-child(2) { animation-delay: .2s; }
+    .rc-typing span:nth-child(3) { animation-delay: .4s; }
+    @keyframes rcbounce { 0%,60%,100% { transform: translateY(0); } 30% { transform: translateY(-6px); } }
+    .rc-footer {
+      padding: 10px 12px; border-top: 1px solid var(--border);
+      display: flex; gap: 8px; align-items: flex-end;
+    }
+    #rc-input {
+      flex: 1; background: #0b0b14; border: 1px solid var(--border); border-radius: 10px;
+      padding: 9px 12px; color: var(--text); font-size: .875rem; resize: none;
+      outline: none; max-height: 100px; line-height: 1.4; font-family: 'Manrope', sans-serif;
+    }
+    #rc-input:focus { border-color: var(--accent); }
+    #rc-input::placeholder { color: var(--muted); }
+    #rc-send {
+      background: var(--accent); border: none; border-radius: 10px;
+      width: 38px; height: 38px; flex-shrink: 0; cursor: pointer;
+      display: flex; align-items: center; justify-content: center; transition: background .15s;
+    }
+    #rc-send:hover { background: var(--accent-d); }
+    #rc-send:disabled { background: var(--border); cursor: default; }
+    #rc-send svg { width: 18px; height: 18px; fill: #0b0b14; }
+    .rc-powered { text-align: center; font-size: .68rem; color: var(--muted); padding: 4px 0 8px; }
+    .rc-powered a { color: var(--muted); text-decoration: none; }
+
+    /* Scrolled nav shadow */
+    #main-nav.scrolled { box-shadow: 0 4px 32px rgba(0,0,0,0.5); }
+  </style>
+  <script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: {
+            "on-error": "#690005", "surface-tint": "#2fd9f4", "secondary-fixed": "#d3e4fe",
+            "error": "#ffb4ab", "on-secondary-fixed-variant": "#38485d", "on-secondary-fixed": "#0b1c30",
+            "on-primary-container": "#005763", "surface-container": "#1f1f28", "surface-bright": "#393843",
+            "primary-fixed-dim": "#2fd9f4", "inverse-primary": "#006877", "tertiary-container": "#ffb13b",
+            "surface-raised": "#111122", "secondary-container": "#3a4a5f", "on-secondary-container": "#a9bad3",
+            "surface-container-lowest": "#0d0d16", "on-surface": "#e4e1ee", "surface-dim": "#13121c",
+            "primary-container": "#22d3ee", "primary": "#8aebff", "on-primary": "#00363e",
+            "surface-container-low": "#1b1b24", "tertiary-fixed-dim": "#ffb957", "inverse-surface": "#e4e1ee",
+            "primary-fixed": "#a2eeff", "on-tertiary": "#462b00", "secondary": "#b7c8e1",
+            "text-primary": "#E2E8F0", "error-container": "#93000a", "inverse-on-surface": "#302f3a",
+            "on-background": "#e4e1ee", "text-muted": "#64748B", "secondary-fixed-dim": "#b7c8e1",
+            "on-error-container": "#ffdad6", "surface-deep": "#0B0B14", "on-tertiary-fixed-variant": "#643f00",
+            "on-tertiary-fixed": "#2a1800", "tertiary": "#ffd6a3", "outline": "#859397",
+            "on-tertiary-container": "#6e4600", "on-primary-fixed": "#001f25", "surface-container-high": "#292933",
+            "outline-variant": "#3c494c", "on-surface-variant": "#bbc9cd", "tertiary-fixed": "#ffddb5",
+            "background": "#13121c", "on-primary-fixed-variant": "#004e5a", "surface-variant": "#34343e",
+            "surface-container-highest": "#34343e", "surface": "#13121c", "on-secondary": "#213145"
+          },
+          borderRadius: { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" },
+          spacing: {
+            "margin-mobile": "16px", "base": "8px", "margin-desktop": "40px",
+            "gutter": "24px", "container-max": "1280px"
+          },
+          fontFamily: {
+            "display-lg": ["Manrope"], "body-md": ["Manrope"], "headline-md": ["Manrope"],
+            "headline-lg": ["Manrope"], "body-lg": ["Manrope"], "label-sm": ["Manrope"],
+            "label-md": ["Manrope"], "headline-lg-mobile": ["Manrope"]
+          },
+          fontSize: {
+            "display-lg": ["48px", {"lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "800"}],
+            "body-md": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+            "headline-md": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+            "headline-lg": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.01em", "fontWeight": "700"}],
+            "body-lg": ["18px", {"lineHeight": "28px", "fontWeight": "400"}],
+            "label-sm": ["12px", {"lineHeight": "16px", "fontWeight": "500"}],
+            "label-md": ["14px", {"lineHeight": "20px", "letterSpacing": "0.02em", "fontWeight": "600"}],
+            "headline-lg-mobile": ["28px", {"lineHeight": "36px", "fontWeight": "700"}]
+          }
+        }
+      }
+    }
+  </script>
+</head>
+<body class="grid-pattern">
+
+<!-- ── Nav ── -->
+<nav id="main-nav" class="fixed top-0 w-full z-50 bg-background/80 backdrop-blur-xl border-b border-primary/10 shadow-sm h-20 transition-shadow duration-200">
+  <div class="flex justify-between items-center px-margin-desktop max-w-container-max mx-auto h-full">
+    <a href="/" class="flex items-center gap-2 no-underline">
+      <div class="font-display-lg text-headline-md font-extrabold tracking-tighter">
+        <span class="text-on-surface">RING</span><span class="text-primary">CATCH</span><span class="text-on-surface lowercase">.io</span>
+      </div>
+    </a>
+    <div class="hidden md:flex items-center gap-8">
+      <a class="text-on-surface-variant hover:text-primary transition-colors font-label-md text-label-md" href="#features">Features</a>
+      <a class="text-on-surface-variant hover:text-primary transition-colors font-label-md text-label-md" href="#pricing">Pricing</a>
+      <a class="text-on-surface-variant hover:text-primary transition-colors font-label-md text-label-md" href="#faq">FAQ</a>
+      <a href="/book" class="bg-primary-container text-on-primary-container px-6 py-2 rounded-xl font-bold hover:bg-primary/90 transition-all active:scale-95 duration-200 no-underline">Get Started →</a>
+    </div>
+    <button class="md:hidden text-primary" onclick="openChatWidget()">
+      <span class="material-symbols-outlined">chat</span>
+    </button>
+  </div>
+</nav>
+
+<!-- ── Hero ── -->
+<header class="relative pt-40 pb-20 px-margin-mobile md:px-margin-desktop max-w-container-max mx-auto overflow-hidden">
+  <div class="absolute inset-0 -z-10 opacity-25 flex items-center justify-center pointer-events-none">
+    <img alt="" class="w-full h-full object-cover tech-bg-overlay" src="/img/tech-bg.jpg" aria-hidden="true">
+  </div>
+  <div class="absolute inset-0 -z-10 hero-gradient pointer-events-none"></div>
+  <div class="max-w-4xl mx-auto text-center space-y-8 relative z-10">
+    <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-primary/20 bg-primary/5 text-primary text-label-sm font-label-sm animate-pulse">
+      <span class="material-symbols-outlined text-[14px]">bolt</span>
+      AI-Powered Lead Capture Active 24/7
+    </div>
+    <h1 class="font-display-lg text-[56px] md:text-[84px] font-extrabold leading-tight tracking-tighter">
+      <span class="text-on-surface">RING</span><span class="text-primary cyan-glow">CATCH</span><span class="text-on-surface lowercase">.io</span>
+      <br>
+      <span class="text-on-surface text-display-lg block mt-4">Every lead caught. Every customer served.</span>
+    </h1>
+    <p class="font-body-lg text-body-lg text-on-surface-variant max-w-2xl mx-auto">
+      An AI employee that never clocks out. Answers questions, captures leads, and books appointments 24/7 for your business.
+    </p>
+    <div class="flex flex-col md:flex-row items-center justify-center gap-4 pt-6">
+      <a href="/book" class="w-full md:w-auto bg-primary-container text-on-primary-container px-10 py-4 rounded-xl font-bold text-lg btn-primary-glow flex items-center justify-center gap-2 no-underline">
+        Get Started Free <span class="material-symbols-outlined">arrow_forward</span>
+      </a>
+      <button onclick="openChatWidget()" id="hero-chat-btn" class="w-full md:w-auto border border-primary text-primary px-10 py-4 rounded-xl font-bold text-lg hover:bg-primary/10 transition-colors flex items-center justify-center gap-2">
+        <span class="material-symbols-outlined">chat</span> Chat with us live
+      </button>
+    </div>
+  </div>
+</header>
+
+<!-- ── Trust & Social Proof ── -->
+<section class="py-12 px-margin-mobile md:px-margin-desktop max-w-container-max mx-auto">
+  <div class="grid grid-cols-2 md:grid-cols-4 gap-gutter mb-16">
+    <div class="glass-card p-6 rounded-2xl text-center space-y-2">
+      <div class="font-display-lg text-primary text-headline-lg">48hr</div>
+      <div class="text-on-surface-variant font-label-md">Professional Setup</div>
+    </div>
+    <div class="glass-card p-6 rounded-2xl text-center space-y-2">
+      <div class="font-display-lg text-primary text-headline-lg">24/7</div>
+      <div class="text-on-surface-variant font-label-md">Full Coverage</div>
+    </div>
+    <div class="glass-card p-6 rounded-2xl text-center space-y-2">
+      <div class="font-display-lg text-primary text-headline-lg">&lt;3s</div>
+      <div class="text-on-surface-variant font-label-md">Response Time</div>
+    </div>
+    <div class="glass-card p-6 rounded-2xl text-center space-y-2">
+      <div class="font-display-lg text-primary text-headline-lg">$0</div>
+      <div class="text-on-surface-variant font-label-md">Onboarding Fee</div>
+    </div>
+  </div>
+  <div class="flex flex-wrap justify-center items-center gap-3 flex-col md:flex-row text-center">
+    <span class="text-on-surface-variant text-label-md w-full md:w-auto mb-2 md:mb-0">TRUSTED BY LEADERS IN:</span>
+    <span class="bg-primary/10 text-primary border border-primary/20 px-4 py-1.5 rounded-full text-label-sm font-label-sm">HVAC</span>
+    <span class="bg-primary/10 text-primary border border-primary/20 px-4 py-1.5 rounded-full text-label-sm font-label-sm">PLUMBING</span>
+    <span class="bg-primary/10 text-primary border border-primary/20 px-4 py-1.5 rounded-full text-label-sm font-label-sm">LAW FIRMS</span>
+    <span class="bg-primary/10 text-primary border border-primary/20 px-4 py-1.5 rounded-full text-label-sm font-label-sm">REAL ESTATE</span>
+    <span class="bg-primary/10 text-primary border border-primary/20 px-4 py-1.5 rounded-full text-label-sm font-label-sm">DENTAL</span>
+    <span class="bg-primary/10 text-primary border border-primary/20 px-4 py-1.5 rounded-full text-label-sm font-label-sm">ROOFING</span>
+    <span class="bg-primary/10 text-primary border border-primary/20 px-4 py-1.5 rounded-full text-label-sm font-label-sm">PEST CONTROL</span>
+    <span class="bg-primary/10 text-primary border border-primary/20 px-4 py-1.5 rounded-full text-label-sm font-label-sm">VETERINARY</span>
+    <span class="bg-primary/10 text-primary border border-primary/20 px-4 py-1.5 rounded-full text-label-sm font-label-sm">CONTRACTORS</span>
+    <span class="bg-primary/10 text-primary border border-primary/20 px-4 py-1.5 rounded-full text-label-sm font-label-sm">+ any small business</span>
+  </div>
+</section>
+
+<!-- ── How It Works ── -->
+<section class="relative py-24 px-margin-mobile md:px-margin-desktop max-w-container-max mx-auto bg-surface-deep/50 rounded-[40px] my-20 overflow-hidden" id="how">
+  <div class="absolute inset-0 opacity-10 pointer-events-none rounded-[40px] overflow-hidden">
+    <img alt="" class="w-full h-full object-cover grayscale" src="/img/tech-bg.jpg" aria-hidden="true">
+  </div>
+  <div class="text-center mb-16 space-y-4 relative z-10">
+    <h2 class="font-display-lg text-headline-lg text-on-surface">Streamlined Success</h2>
+    <p class="text-on-surface-variant font-body-md max-w-xl mx-auto">Get your business optimized in three simple, high-tech steps.</p>
+  </div>
+  <div class="grid md:grid-cols-3 gap-12 relative z-10">
+    <div class="hidden md:block absolute top-1/2 left-0 w-full h-0.5 bg-primary/20 -z-10 shadow-[0_0_15px_rgba(34,211,238,0.3)]"></div>
+    <div class="flex flex-col items-center text-center space-y-6">
+      <div class="w-16 h-16 rounded-2xl bg-primary-container text-on-primary-container font-bold text-2xl flex items-center justify-center btn-primary-glow">1</div>
+      <h3 class="font-headline-md text-headline-md text-on-surface">Book a free call</h3>
+      <p class="text-on-surface-variant font-body-md">Tell us about your business — services, hours, common questions, and how you want leads handled.</p>
+    </div>
+    <div class="flex flex-col items-center text-center space-y-6">
+      <div class="w-16 h-16 rounded-2xl bg-primary-container text-on-primary-container font-bold text-2xl flex items-center justify-center btn-primary-glow">2</div>
+      <h3 class="font-headline-md text-headline-md text-on-surface">We build your bot</h3>
+      <p class="text-on-surface-variant font-body-md">We configure the AI for your business, load your FAQs, connect your calendar. Zero code from you.</p>
+    </div>
+    <div class="flex flex-col items-center text-center space-y-6">
+      <div class="w-16 h-16 rounded-2xl bg-primary-container text-on-primary-container font-bold text-2xl flex items-center justify-center btn-primary-glow">3</div>
+      <h3 class="font-headline-md text-headline-md text-on-surface">Go live in 48 hours</h3>
+      <p class="text-on-surface-variant font-body-md">One snippet on your site. From that moment your AI is live — catching leads and answering customers around the clock.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ── Features (Bento Grid) ── -->
+<section class="py-24 px-margin-mobile md:px-margin-desktop max-w-container-max mx-auto" id="features">
+  <div class="text-center mb-20 space-y-4">
+    <h2 class="font-display-lg text-headline-lg text-on-surface">The Intelligence Engine</h2>
+    <p class="text-on-surface-variant font-body-md">Advanced capabilities designed for modern growth.</p>
+  </div>
+  <div class="grid md:grid-cols-12 gap-gutter">
+    <div class="md:col-span-8 glass-card p-10 rounded-[32px] group overflow-hidden relative">
+      <div class="relative z-10">
+        <span class="material-symbols-outlined text-primary text-4xl mb-6 block">bolt</span>
+        <h3 class="font-headline-lg text-headline-lg text-on-surface mb-4">Answers Instantly</h3>
+        <p class="text-on-surface-variant text-body-lg max-w-md">No more waiting. Our AI understands complex queries and provides accurate answers within 3 seconds, keeping customers engaged.</p>
+      </div>
+      <div class="absolute right-0 bottom-0 opacity-20 group-hover:opacity-40 transition-opacity pointer-events-none">
+        <img alt="" class="w-96 rounded-tl-[100px]" src="/img/tech-bg.jpg" aria-hidden="true">
+      </div>
+    </div>
+    <div class="md:col-span-4 glass-card p-10 rounded-[32px]">
+      <span class="material-symbols-outlined text-primary text-4xl mb-6 block">person_search</span>
+      <h3 class="font-headline-md text-headline-md text-on-surface mb-4">Captures every lead</h3>
+      <p class="text-on-surface-variant font-body-md">Never miss a contact. RingCatch qualifies every visitor and securely delivers their data to your CRM.</p>
+    </div>
+    <div class="md:col-span-4 glass-card p-10 rounded-[32px]">
+      <span class="material-symbols-outlined text-primary text-4xl mb-6 block">calendar_month</span>
+      <h3 class="font-headline-md text-headline-md text-on-surface mb-4">Books appointments</h3>
+      <p class="text-on-surface-variant font-body-md">Seamlessly integrates with your calendar to book qualified meetings while you sleep.</p>
+    </div>
+    <div class="md:col-span-8 glass-card p-10 rounded-[32px] group overflow-hidden relative">
+      <div class="relative z-10">
+        <span class="material-symbols-outlined text-primary text-4xl mb-6 block">psychology</span>
+        <h3 class="font-headline-lg text-headline-lg text-on-surface mb-4">Learns your business</h3>
+        <p class="text-on-surface-variant text-body-lg max-w-md">Our AI ingests your PDFs, website links, and documentation to become an expert on your unique services — not a generic script.</p>
+      </div>
+      <div class="absolute right-0 bottom-0 w-80 h-80 bg-primary/10 blur-[100px] rounded-full opacity-10 group-hover:opacity-30 transition-opacity pointer-events-none"></div>
+    </div>
+  </div>
+</section>
+
+<!-- ── Pricing ── -->
+<section class="py-24 px-margin-mobile md:px-margin-desktop max-w-container-max mx-auto" id="pricing">
+  <div class="max-w-xl mx-auto glass-card p-12 rounded-[40px] border border-primary/40 relative overflow-hidden">
+    <div class="absolute inset-0 opacity-5 -z-10 pointer-events-none overflow-hidden rounded-[40px]">
+      <img alt="" class="w-full h-full object-cover" src="/img/tech-bg.jpg" aria-hidden="true">
+    </div>
+    <div class="absolute top-0 right-0 bg-primary-container text-on-primary-container px-8 py-2 rounded-bl-3xl font-bold text-label-sm tracking-widest">MOST POPULAR</div>
+    <div class="text-center space-y-6 relative z-10">
+      <h2 class="font-display-lg text-headline-lg text-on-surface">The Full Growth Stack</h2>
+      <div class="flex items-center justify-center gap-1">
+        <span class="font-display-lg text-primary text-[64px] leading-none">$89</span>
+        <span class="text-on-surface-variant text-headline-md mt-6">/mo</span>
+      </div>
+      <p class="text-on-surface text-body-md font-bold" style="color: var(--accent)">+ $450 one-time setup fee</p>
+      <hr class="border-primary/10">
+      <ul class="text-left space-y-4 py-4">
+        <li class="flex items-center gap-3 text-on-surface-variant">
+          <span class="material-symbols-outlined text-primary">check_circle</span>
+          Custom-trained AI brain
+        </li>
+        <li class="flex items-center gap-3 text-on-surface-variant">
+          <span class="material-symbols-outlined text-primary">check_circle</span>
+          48-hour rapid deployment
+        </li>
+        <li class="flex items-center gap-3 text-on-surface-variant">
+          <span class="material-symbols-outlined text-primary">check_circle</span>
+          Zero tech skills required
+        </li>
+        <li class="flex items-center gap-3 text-on-surface-variant">
+          <span class="material-symbols-outlined text-primary">check_circle</span>
+          Installed on your existing website
+        </li>
+        <li class="flex items-center gap-3 text-on-surface-variant">
+          <span class="material-symbols-outlined text-primary">check_circle</span>
+          Unlimited lead capture &amp; appointment booking
+        </li>
+        <li class="flex items-center gap-3 text-on-surface-variant">
+          <span class="material-symbols-outlined text-primary">check_circle</span>
+          Monthly tuning &amp; maintenance included
+        </li>
+      </ul>
+      <a href="/book" class="block w-full bg-primary-container text-on-primary-container py-5 rounded-2xl font-bold text-xl btn-primary-glow text-center no-underline">
+        Book a Free Call →
+      </a>
+      <p class="text-on-surface-variant text-label-sm">No long-term contracts. Cancel anytime.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ── FAQ ── -->
+<section class="py-24 px-margin-mobile md:px-margin-desktop max-w-container-max mx-auto" id="faq">
+  <div class="text-center mb-16 space-y-4">
+    <h2 class="font-display-lg text-headline-lg text-on-surface">Common Questions</h2>
+    <p class="text-on-surface-variant font-body-md max-w-xl mx-auto">Everything you need to know before getting started.</p>
+  </div>
+  <div class="faq-list" style="max-width:700px; margin:0 auto;">
+    <div class="faq-item">
+      <button class="faq-btn" aria-expanded="false">
+        <span class="faq-q">Does my website need to be rebuilt?</span>
+        <span class="faq-icon">+</span>
+      </button>
+      <div class="faq-body">
+        <p class="faq-a">No. We add a small snippet to your existing site — one line of code. Works on WordPress, Wix, Squarespace, Shopify, or custom sites.</p>
+      </div>
+    </div>
+    <div class="faq-item">
+      <button class="faq-btn" aria-expanded="false">
+        <span class="faq-q">How does the bot know about my business?</span>
+        <span class="faq-icon">+</span>
+      </button>
+      <div class="faq-body">
+        <p class="faq-a">During onboarding we collect your services, pricing, FAQs, and business details. We feed all of that into the AI so it answers accurately for your specific business — not a generic template.</p>
+      </div>
+    </div>
+    <div class="faq-item">
+      <button class="faq-btn" aria-expanded="false">
+        <span class="faq-q">What happens when the bot can't answer something?</span>
+        <span class="faq-icon">+</span>
+      </button>
+      <div class="faq-body">
+        <p class="faq-a">The bot collects the customer's name, number, and question, and flags it for you to follow up. Nothing falls through the cracks.</p>
+      </div>
+    </div>
+    <div class="faq-item">
+      <button class="faq-btn" aria-expanded="false">
+        <span class="faq-q">Can I update the bot's answers later?</span>
+        <span class="faq-icon">+</span>
+      </button>
+      <div class="faq-body">
+        <p class="faq-a">Yes — either through a simple dashboard, or just email us and we'll update it same-day. Monthly maintenance is included in the subscription.</p>
+      </div>
+    </div>
+    <div class="faq-item">
+      <button class="faq-btn" aria-expanded="false">
+        <span class="faq-q">What if I want to cancel?</span>
+        <span class="faq-icon">+</span>
+      </button>
+      <div class="faq-body">
+        <p class="faq-a">No contracts, no cancellation fees. Cancel anytime with 30 days' notice. The $450 setup is a one-time cost — you keep everything we built.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── Final CTA ── -->
+<section class="py-20 px-margin-mobile md:px-margin-desktop max-w-container-max mx-auto text-center">
+  <div class="glass-card rounded-[40px] py-16 px-8">
+    <h2 class="font-display-lg text-headline-lg text-on-surface mb-4">Ready to stop missing customers?</h2>
+    <p class="text-on-surface-variant font-body-lg mb-10 max-w-xl mx-auto">Book a free 15-minute call. We'll show you exactly how it works for your business.</p>
+    <div class="flex flex-col md:flex-row items-center justify-center gap-4">
+      <a href="/book" class="w-full md:w-auto bg-primary-container text-on-primary-container px-10 py-4 rounded-xl font-bold text-lg btn-primary-glow flex items-center justify-center gap-2 no-underline">
+        Book a Free Call <span class="material-symbols-outlined">arrow_forward</span>
+      </a>
+      <button onclick="openChatWidget()" class="w-full md:w-auto border border-primary text-primary px-10 py-4 rounded-xl font-bold text-lg hover:bg-primary/10 transition-colors flex items-center justify-center gap-2">
+        <span class="material-symbols-outlined">chat</span> Chat with us now
+      </button>
+    </div>
+  </div>
+</section>
+
+<!-- ── Footer ── -->
+<footer class="bg-surface-deep border-t border-outline-variant w-full mt-8 pb-24 md:pb-12 pt-12">
+  <div class="flex flex-col md:flex-row justify-between items-center py-12 px-margin-desktop max-w-container-max mx-auto gap-gutter">
+    <div class="flex flex-col gap-4 text-center md:text-left">
+      <div class="flex items-center gap-2 justify-center md:justify-start">
+        <div class="font-display-lg text-headline-md font-extrabold tracking-tighter">
+          <span class="text-on-surface">RING</span><span class="text-primary">CATCH</span><span class="text-on-surface lowercase">.io</span>
+        </div>
+      </div>
+      <p class="font-body-md text-body-md text-on-surface-variant opacity-60">
+        © 2026 RingCatch.io. AI-Powered Business Intelligence.<br>
+        <a href="mailto:alex@ringcatch.io" class="text-primary/60 hover:text-primary transition-colors no-underline">alex@ringcatch.io</a>
+      </p>
+    </div>
+    <div class="flex flex-col md:flex-row gap-8 items-center">
+      <a class="text-on-surface-variant hover:text-primary transition-colors font-body-md text-body-md no-underline" href="#">Privacy Policy</a>
+      <a class="text-on-surface-variant hover:text-primary transition-colors font-body-md text-body-md no-underline" href="#">Terms of Service</a>
+      <a class="text-on-surface-variant hover:text-primary transition-colors font-body-md text-body-md no-underline" href="/book">Contact Us</a>
+    </div>
+  </div>
+</footer>
+
+<!-- ── Mobile Bottom Nav ── -->
+<nav class="fixed bottom-0 w-full z-50 rounded-t-xl bg-surface-raised/90 backdrop-blur-lg border-t border-primary/10 shadow-lg flex justify-around items-center h-16 md:hidden px-4">
+  <a class="flex flex-col items-center justify-center bg-primary-container text-on-primary-container rounded-xl p-2" href="/">
+    <span class="material-symbols-outlined">home</span>
+    <span class="font-label-md text-[10px]">Home</span>
+  </a>
+  <a class="flex flex-col items-center justify-center text-on-surface-variant p-2 hover:text-primary transition-colors" href="#features">
+    <span class="material-symbols-outlined">bolt</span>
+    <span class="font-label-md text-[10px]">Features</span>
+  </a>
+  <a class="flex flex-col items-center justify-center text-on-surface-variant p-2 hover:text-primary transition-colors" href="#pricing">
+    <span class="material-symbols-outlined">payments</span>
+    <span class="font-label-md text-[10px]">Pricing</span>
+  </a>
+  <button onclick="openChatWidget()" class="flex flex-col items-center justify-center text-on-surface-variant p-2 hover:text-primary transition-colors bg-transparent border-none cursor-pointer">
+    <span class="material-symbols-outlined">support_agent</span>
+    <span class="font-label-md text-[10px]">Chat</span>
+  </button>
+</nav>
+
+<!-- ── Chat Bubble ── -->
+<button id="rc-bubble" aria-label="Chat with us">
+  <svg viewBox="0 0 100 100" width="56" height="56" style="border-radius:50%">
+    <defs><linearGradient id="rcg" x1="0" y1="0" x2="100" y2="100" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#22d3ee"/><stop offset="100%" stop-color="#0891b2"/></linearGradient></defs>
+    <circle cx="50" cy="50" r="50" fill="url(#rcg)"/>
+    <text x="50" y="66" font-family="Arial,Helvetica,sans-serif" font-size="38" font-weight="900" text-anchor="middle" fill="#0b0b14" letter-spacing="-1">RC</text>
+  </svg>
+  <span class="rc-badge" id="rc-badge"></span>
+</button>
+
+<!-- ── Chat Panel ── -->
+<div id="rc-panel" role="dialog" aria-label="RingCatch.io chat">
+  <div class="rc-header">
+    <div class="rc-avatar">
+      <svg viewBox="0 0 100 100" width="36" height="36" style="border-radius:50%;display:block">
+        <defs><linearGradient id="rcg2" x1="0" y1="0" x2="100" y2="100" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#22d3ee"/><stop offset="100%" stop-color="#0891b2"/></linearGradient></defs>
+        <circle cx="50" cy="50" r="50" fill="url(#rcg2)"/>
+        <text x="50" y="66" font-family="Arial,Helvetica,sans-serif" font-size="38" font-weight="900" text-anchor="middle" fill="#0b0b14" letter-spacing="-1">RC</text>
+      </svg>
+    </div>
+    <div class="rc-header-text">
+      <div class="rc-header-name">Alex · RingCatch.io AI</div>
+      <div class="rc-header-sub" id="rc-header-sub">Typically replies instantly</div>
+    </div>
+    <div class="rc-demo-badge" id="rc-demo-badge">🤖 Live Demo</div>
+    <button class="rc-close" id="rc-close" aria-label="Close chat">✕</button>
+  </div>
+  <div id="rc-messages"></div>
+  <div id="rc-chips"></div>
+  <div class="rc-footer">
+    <textarea id="rc-input" rows="1" placeholder="Ask me anything…" autocomplete="off"></textarea>
+    <button id="rc-send" aria-label="Send">
+      <svg viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
+    </button>
+  </div>
+  <div class="rc-powered"><a href="https://ringcatch.io">Powered by RingCatch.io AI</a></div>
+</div>
+
+<script>
+(function() {
+  const STORAGE_KEY = 'rc_session';
+  const GREETING = "Hey! 👋 I'm Alex, RingCatch.io's AI assistant — and yes, I'm also a live demo of what we build for businesses like yours. What kind of business do you run?";
+
+  let sessionId = localStorage.getItem(STORAGE_KEY) || '';
+  let isOpen = false;
+  let isWaiting = false;
+  let greeted = false;
+
+  const panel    = document.getElementById('rc-panel');
+  const bubble   = document.getElementById('rc-bubble');
+  const badge    = document.getElementById('rc-badge');
+  const msgs     = document.getElementById('rc-messages');
+  const input    = document.getElementById('rc-input');
+  const send     = document.getElementById('rc-send');
+  const closeBtn = document.getElementById('rc-close');
+  const chipsEl  = document.getElementById('rc-chips');
+
+  const BUSINESS_CHIPS = ["Plumbing / HVAC", "Electrician", "Landscaping", "Pest Control", "Realtor", "Property Mgmt", "Restaurant / Café", "Salon / Spa", "Other"];
+
+  function showChips(options) {
+    chipsEl.innerHTML = '';
+    options.forEach(opt => {
+      const btn = document.createElement('button');
+      btn.className = 'rc-chip';
+      btn.textContent = opt;
+      btn.addEventListener('click', () => {
+        input.value = opt;
+        clearChips();
+        sendMsg();
+      });
+      chipsEl.appendChild(btn);
+    });
+  }
+  function clearChips() { chipsEl.innerHTML = ''; }
+
+  function open() {
+    isOpen = true;
+    panel.classList.add('open');
+    badge.classList.remove('show');
+    input.focus();
+    if (!greeted) { greeted = true; addMsg('bot', GREETING); showChips(BUSINESS_CHIPS); }
+  }
+  function close() { isOpen = false; panel.classList.remove('open'); }
+
+  bubble.addEventListener('click', () => isOpen ? close() : open());
+  closeBtn.addEventListener('click', close);
+
+  window.openChatWidget = function() { if (!isOpen) open(); };
+
+  function addMsg(role, text) {
+    const div = document.createElement('div');
+    div.className = `rc-msg ${role}`;
+    const bub = document.createElement('div');
+    bub.className = 'rc-bubble-text';
+    bub.innerHTML = text.replace(/\n/g,'<br>').replace(/(https?:\/\/[^\s<]+)/g,'<a href="$1" target="_blank" rel="noopener" style="color:var(--accent)">$1</a>');
+    div.appendChild(bub);
+    msgs.appendChild(div);
+    msgs.scrollTop = msgs.scrollHeight;
+    return div;
+  }
+
+  function showTyping() {
+    const div = document.createElement('div');
+    div.className = 'rc-msg bot';
+    div.id = 'rc-typing';
+    div.innerHTML = '<div class="rc-typing"><span></span><span></span><span></span></div>';
+    msgs.appendChild(div);
+    msgs.scrollTop = msgs.scrollHeight;
+  }
+  function hideTyping() {
+    const t = document.getElementById('rc-typing');
+    if (t) t.remove();
+  }
+
+  async function sendMsg() {
+    const text = input.value.trim();
+    if (!text || isWaiting) return;
+    clearChips();
+    input.value = '';
+    input.style.height = 'auto';
+    addMsg('user', text);
+    isWaiting = true;
+    send.disabled = true;
+    showTyping();
+
+    try {
+      const res = await fetch('/api/chat', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({message: text, session_id: sessionId}),
+      });
+      const data = await res.json();
+      sessionId = data.session_id || sessionId;
+      localStorage.setItem(STORAGE_KEY, sessionId);
+      hideTyping();
+      addMsg('bot', data.response || "One sec — can I grab your name and best number so Mike can follow up with you directly?");
+      if (data.suggestions && data.suggestions.length) showChips(data.suggestions);
+      // Show demo badge when Alex enters demo mode (phases 2-3)
+      const demoBadge = document.getElementById('rc-demo-badge');
+      const headerSub = document.getElementById('rc-header-sub');
+      if (data.demo_active) {
+        demoBadge.classList.add('active');
+        headerSub.textContent = 'Live demo running';
+      } else if (demoBadge.classList.contains('active')) {
+        demoBadge.classList.remove('active');
+        headerSub.textContent = 'Typically replies instantly';
+      }
+    } catch(e) {
+      hideTyping();
+      clearChips();
+      addMsg('bot', "One sec — can I grab your name and best number so Mike can follow up with you directly?");
+    }
+    isWaiting = false;
+    send.disabled = false;
+    input.focus();
+  }
+
+  send.addEventListener('click', sendMsg);
+  input.addEventListener('keydown', e => {
+    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMsg(); }
+  });
+  input.addEventListener('input', () => {
+    input.style.height = 'auto';
+    input.style.height = Math.min(input.scrollHeight, 100) + 'px';
+  });
+
+  // Proactive open after 10s if visitor hasn't interacted
+  setTimeout(() => {
+    if (!isOpen) {
+      badge.classList.add('show');
+      setTimeout(() => { if (!isOpen) open(); }, 4000);
+    }
+  }, 10000);
+})();
+</script>
+
+<script>
+  // Pageview tracking
+  fetch('/api/track', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({page: '/', referrer: document.referrer})
+  }).catch(() => {});
+
+  // Sticky nav shadow on scroll
+  const nav = document.getElementById('main-nav');
+  window.addEventListener('scroll', () => {
+    nav.classList.toggle('scrolled', window.scrollY > 10);
+  }, { passive: true });
+
+  // Glass card mouse-track micro-interactions
+  document.querySelectorAll('.glass-card').forEach(card => {
+    card.addEventListener('mousemove', (e) => {
+      const rect = card.getBoundingClientRect();
+      card.style.setProperty('--mouse-x', `${e.clientX - rect.left}px`);
+      card.style.setProperty('--mouse-y', `${e.clientY - rect.top}px`);
+    });
+  });
+
+  // Smooth scroll for anchor links
+  document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+    anchor.addEventListener('click', function(e) {
+      e.preventDefault();
+      const target = document.querySelector(this.getAttribute('href'));
+      if (target) target.scrollIntoView({ behavior: 'smooth' });
+    });
+  });
+
+  // FAQ accordion
+  document.querySelectorAll('.faq-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const item = btn.closest('.faq-item');
+      const wasOpen = item.classList.contains('open');
+      document.querySelectorAll('.faq-item.open').forEach(el => {
+        el.classList.remove('open');
+        el.querySelector('.faq-btn').setAttribute('aria-expanded', 'false');
+      });
+      if (!wasOpen) {
+        item.classList.add('open');
+        btn.setAttribute('aria-expanded', 'true');
+      }
+    });
+  });
+</script>
+</body>
+</html>

@@ -1,0 +1,19 @@
+[Unit]
+Description=Agency Command Center dashboard
+After=agency-support.service agency-pod-pod.service
+Requires=agency-pod-pod.service
+
+[Container]
+Image=localhost/agency-command:latest
+ContainerName=agency-command
+Pod=agency-pod.pod
+Volume=agency-data:/data:Z
+EnvironmentFile=%h/agency/.env
+Environment=STT_MODEL=Systran/faster-whisper-large-v3
+
+[Service]
+Restart=on-failure
+TimeoutStartSec=120
+
+[Install]
+WantedBy=default.target

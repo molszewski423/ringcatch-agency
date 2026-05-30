@@ -1,0 +1,18 @@
+[Unit]
+Description=Agency Discord Bot
+After=agency-orchestrator.service agency-pod-pod.service
+Requires=agency-pod-pod.service
+
+[Container]
+Image=localhost/agency-discord:latest
+ContainerName=agency-discord
+Pod=agency-pod.pod
+Volume=agency-data:/data:Z
+EnvironmentFile=%h/agency/.env
+
+[Service]
+Restart=on-failure
+TimeoutStartSec=60
+
+[Install]
+WantedBy=default.target

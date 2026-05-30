@@ -1,0 +1,13 @@
+{"timestamp": "2026-05-16T22:59:10.127826", "model": "gemma4:26b", "prompt_summary": "Overall multi-agent architecture for RingCatch 7-agent + dashboard system", "decision": "Architecture review before any code is written"}
+{"timestamp": "2026-05-16T23:02:15.281903+00:00", "model": "gemma4:26b", "prompt_summary": "support_logic design query", "decision": "Used gemma4:26b to design support logic"}
+{"timestamp": "2026-05-16T23:03:50.980873+00:00", "model": "gemma4:26b", "prompt_summary": "cfo_logic design query", "decision": "Used gemma4:26b to design cfo logic"}
+{"timestamp": "2026-05-16T23:05:25.643710+00:00", "model": "gemma4:26b", "prompt_summary": "sales_logic design query", "decision": "Used gemma4:26b to design sales logic"}
+{"timestamp": "2026-05-16T23:05:34.035264+00:00", "model": "qwen2.5:7b", "prompt_summary": "dashboard_api design query", "decision": "Used qwen2.5:7b to design dashboard api"}
+{"timestamp": "2026-05-16T23:06:18.034940+00:00", "model": "qwen2.5:7b", "prompt_summary": "shared DB schema generation", "decision": "Generated db.py with all 12 tables + helper functions"}
+{"timestamp": "2026-05-16T23:07:13.380930+00:00", "model": "qwen2.5:7b", "prompt_summary": "agency-support main.py generation", "decision": "Generated support agent boilerplate"}
+{"timestamp": "2026-05-16T23:08:15.963645+00:00", "model": "qwen2.5:7b", "prompt_summary": "agency-cfo main.py generation", "decision": "Generated CFO agent with Stripe, P&L, tax reserve"}
+{"timestamp": "2026-05-16T23:08:44.397435+00:00", "model": "qwen2.5:7b", "prompt_summary": "agency-legal main.py generation", "decision": "Generated legal agent with reportlab PDF, CAN-SPAM check"}
+{"timestamp": "2026-05-16T23:13:40.412925+00:00", "model": "gemma4:26b", "prompt_summary": "agency-sales main.py generation", "decision": "Generated sales agent with LLM qualification + objection handling"}
+{"timestamp": "2026-05-16T23:17:40.544883+00:00", "model": "gemma4:26b", "prompt_summary": "agency-marketing main.py generation", "decision": "Generated marketing agent with A/B testing and niche research"}
+{"timestamp": "2026-05-16T23:23:46.000386+00:00", "model": "gemma4:26b", "prompt_summary": "agency-success main.py generation", "decision": "Generated client success agent with churn scoring"}
+{"timestamp": "2026-05-16T23:28:05.412307+00:00", "model": "gemma4:26b", "prompt_summary": "agency-bi main.py generation", "decision": "Generated BI agent with pattern analysis and executive summaries"}

@@ -1,0 +1,29 @@
+[Unit]
+Description=Cloudflare Tunnel — exposes ringcatch.io publicly via cfargotunnel.com
+After=agency-landing.service
+Requires=agency-pod-pod.service
+
+# Run  bash ~/agency/scripts/tunnel-setup.sh  once before enabling this unit.
+# That script uses CLOUDFLARE_API_TOKEN to create the tunnel, configure DNS,
+# and write CLOUDFLARE_TUNNEL_TOKEN into .env.
+
+[Container]
+Image=docker.io/cloudflare/cloudflared:latest
+ContainerName=agency-tunnel
+Pod=agency-pod.pod
+
+EnvironmentFile=%h/agency/.env
+# TUNNEL_TOKEN is loaded from .env above (alias of CLOUDFLARE_TUNNEL_TOKEN)
+# cloudflared reads it automatically with the `tunnel run` subcommand
+
+# Ingress rules are stored remotely in Cloudflare (configured by tunnel-setup.sh):
+#   ringcatch.io → http://127.0.0.1:8090  (landing page, inside pod)
+Exec=tunnel --no-autoupdate --loglevel info run
+
+[Service]
+Restart=on-failure
+RestartSec=10
+TimeoutStartSec=90
+
+[Install]
+WantedBy=default.target

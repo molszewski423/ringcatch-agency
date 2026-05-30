@@ -1,0 +1,16 @@
+[Unit]
+Description=Kokoro TTS service (CPU)
+After=agency-pod-pod.service
+Requires=agency-pod-pod.service
+
+[Container]
+Image=ghcr.io/remsky/kokoro-fastapi-cpu:v0.2.2
+ContainerName=agency-kokoro
+Pod=agency-pod.pod
+
+[Service]
+Restart=on-failure
+TimeoutStartSec=180
+
+[Install]
+WantedBy=default.target
