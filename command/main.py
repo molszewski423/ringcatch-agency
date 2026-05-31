@@ -17,11 +17,11 @@ logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(mess
 logger = logging.getLogger(__name__)
 
 DB_PATH          = Path(os.environ.get("DB_PATH", "/data/agency.db"))
-ORCHESTRATOR_URL = os.environ.get("ORCHESTRATOR_URL", "http://127.0.0.1:8109")
-SPEACHES_URL     = os.environ.get("SPEACHES_URL", "http://127.0.0.1:8000")
+ORCHESTRATOR_URL = os.environ.get("ORCHESTRATOR_URL", "http://agency-orchestrator:8109")
+SPEACHES_URL     = os.environ.get("SPEACHES_URL", "http://agency-voice:8000")
 STT_MODEL        = os.environ.get("STT_MODEL", "Systran/faster-whisper-large-v3")
 TTS_MODEL        = os.environ.get("TTS_MODEL", "speaches-ai/Kokoro-82M-v1.0-ONNX-fp16")
-DELIVERY_URL     = os.environ.get("DELIVERY_URL", "http://127.0.0.1:8081")
+DELIVERY_URL     = os.environ.get("DELIVERY_URL", "http://agency-delivery:8081")
 AGENT            = "agency-command"
 
 _CHAT_MODEL    = os.environ.get("CHAT_MODEL", "llama3.1:8b")
@@ -49,20 +49,20 @@ AGENT_MODELS = {
 }
 
 AGENT_URLS = {
-    "agency-orchestrator": "http://127.0.0.1:8109/status",
-    "agency-scraper":      "http://127.0.0.1:8079/health",
-    "agency-support":      "http://127.0.0.1:8104/status",
-    "agency-legal":        "http://127.0.0.1:8101/status",
-    "agency-sales":        "http://127.0.0.1:8107/status",
-    "agency-marketing":    "http://127.0.0.1:8102/status",
-    "agency-success":      "http://127.0.0.1:8105/status",
-    "agency-bi":           "http://127.0.0.1:8106/status",
-    "agency-outreach":     "http://127.0.0.1:8080/health",
-    "agency-delivery":     "http://127.0.0.1:8081/health",
-    "agency-billing":      "http://127.0.0.1:8082/health",
-    "agency-inbox":        "http://127.0.0.1:8110/health",
-    "agency-cfo":          "http://127.0.0.1:8108/health",
-    "agency-video":        "http://127.0.0.1:8111/health",
+    "agency-orchestrator": "http://agency-orchestrator:8109/status",
+    "agency-scraper":      "http://agency-scraper:8079/health",
+    "agency-support":      "http://agency-support:8104/status",
+    "agency-legal":        "http://agency-legal:8101/status",
+    "agency-sales":        "http://agency-sales:8107/status",
+    "agency-marketing":    "http://agency-marketing:8102/status",
+    "agency-success":      "http://agency-success:8105/status",
+    "agency-bi":           "http://agency-bi:8106/status",
+    "agency-outreach":     "http://agency-outreach:8080/health",
+    "agency-delivery":     "http://agency-delivery:8081/health",
+    "agency-billing":      "http://agency-billing:8082/health",
+    "agency-inbox":        "http://agency-inbox:8110/health",
+    "agency-cfo":          "http://agency-cfo:8108/health",
+    "agency-video":        "http://agency-video:8111/health",
 }
 
 event_buffer: deque = deque(maxlen=500)
@@ -399,7 +399,7 @@ async def webhook_brevo(request: Request):
     try:
         async with httpx.AsyncClient(timeout=10) as client:
             resp = await client.post(
-                "http://127.0.0.1:8080/webhook/brevo",
+                "http://agency-outreach:8080/webhook/brevo",
                 content=body,
                 headers={"Content-Type": "application/json"},
             )
@@ -412,7 +412,7 @@ async def webhook_brevo(request: Request):
 async def api_analytics():
     try:
         async with httpx.AsyncClient(timeout=10) as client:
-            resp = await client.get("http://127.0.0.1:8080/analytics")
+            resp = await client.get("http://agency-outreach:8080/analytics")
         return resp.json()
     except Exception as e:
         return {"error": str(e)}
