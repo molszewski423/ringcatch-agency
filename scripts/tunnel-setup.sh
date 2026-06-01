@@ -22,7 +22,7 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ENV_FILE="$SCRIPT_DIR/../.env"
-ZONE_ID="5fa18274dc370ccb5b4494fbecef2814"
+ZONE_ID="${CLOUDFLARE_ZONE_ID:?CLOUDFLARE_ZONE_ID not set in .env}"
 TUNNEL_NAME="ringcatch"
 LANDING_BACKEND="http://localhost:8090"
 API="https://api.cloudflare.com/client/v4"
