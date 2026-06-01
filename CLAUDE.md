@@ -57,3 +57,18 @@ knowledge/             # Markdown KB articles injected into LLM prompts
 - Never call `set_pricing_mode` autonomously — requires explicit instruction
 - `.env` lives only on archbox — never in git
 - Custom images are `localhost/agency-*:latest` in k3s containerd — import manually after each rebuild
+
+---
+
+## Infrastructure notes (updated 2026-06-01)
+
+**Podman is stopped.** The old `agency-pod` Podman pod was stopped 2026-06-01 after full k3s migration. Do not start it — all services run exclusively in k3s.
+
+**agency-tunnel specifics:**
+- `hostPID: true` + init container kills orphaned cloudflared (argv0 match) before registering new connections
+- `strategy: Recreate` — no rolling overlap
+- `--metrics 0.0.0.0:2000` + liveness probe on httpGet /ready :2000 (30s delay, 60s period, 3 failures)
+- If site is down with 502/1033: check `kubectl get pods -n agency -l app=agency-tunnel` first
+
+**outreach/main.py `_parse_suggestions()`:**
+Always strips SUGGEST: [...] block from chat text before returning. Uses comma-split fallback when LLM returns unquoted items (json.loads would fail and previously returned full text including the raw instruction).
