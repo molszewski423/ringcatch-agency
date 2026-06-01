@@ -29,6 +29,9 @@ GCP_TTS_VOICE    = os.environ.get("GCP_TTS_VOICE", "en-US-Journey-F")
 ELEVENLABS_KEY   = os.environ.get("ELEVENLABS_API_KEY", "")
 ELEVENLABS_VOICE = os.environ.get("ELEVENLABS_VOICE_ID", "21m00Tcm4TlvDq8ikWAM")
 PEXELS_KEY   = os.environ.get("PEXELS_API_KEY", "")
+RENDER_HOST  = os.environ.get("RENDER_HOST", "")
+RENDER_USER  = os.environ.get("RENDER_USER", "mike")
+RENDER_KEY   = os.environ.get("RENDER_KEY", "/root/.ssh/id_ed25519")
 AGENT        = "agency-video"
 VIDEO_DIR    = Path("/data/videos")
 FONT_PATH    = "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf"
@@ -560,8 +563,10 @@ async def get_stock_footage(niche: str, output_path: str) -> bool:
         if not videos:
             return False
         video = random.choice(videos[:5])
-        # Pick highest quality file
-        files = sorted(video.get("video_files", []), key=lambda f: f.get("width", 0) * f.get("height", 0), reverse=True)
+        # Cap at 1080p portrait to avoid OOM on 4K footage
+        all_files = video.get("video_files", [])
+        hd = [f for f in all_files if f.get("height", 0) <= 1920]
+        files = sorted(hd or all_files, key=lambda f: f.get("width", 0) * f.get("height", 0), reverse=True)
         if not files:
             return False
         url = files[0]["link"]
@@ -618,22 +623,67 @@ def make_text_overlay(text: str, slide_type: str = "body", accent: str = "") -> 
     return img
 
 
+def _build_ffmpeg_cmd(footage_path, audio_path, output_path, overlay_paths, duration, use_nvenc=False):
+    inputs = ["-stream_loop", "-1", "-t", str(duration + 1), "-i", footage_path,
+              "-i", audio_path]
+    for p in overlay_paths:
+        inputs += ["-loop", "1", "-i", p]
+    n = len(overlay_paths)
+    usable = duration - 0.4
+    seg = usable / max(n, 1)
+    times = [(round(0.2 + i * seg, 2), round(0.2 + (i + 1) * seg, 2)) for i in range(n)]
+    fc = "[0:v]scale=1080:1920:force_original_aspect_ratio=increase,crop=1080:1920,setsar=1[bg];"
+    prev = "bg"
+    for i, (start, end) in enumerate(times):
+        nxt = f"v{i}"
+        fc += f"[{prev}][{i+2}:v]overlay=0:0:enable='between(t,{start},{end})'[{nxt}];"
+        prev = nxt
+    fc = fc.rstrip(";")
+    encoder = ["-c:v", "h264_nvenc", "-preset", "p4", "-rc", "vbr", "-cq", "22"] if use_nvenc               else ["-c:v", "libx264", "-preset", "fast", "-crf", "22"]
+    return ["ffmpeg", "-y", *inputs, "-filter_complex", fc,
+            "-map", f"[{prev}]", "-map", "1:a",
+            *encoder, "-c:a", "aac", "-b:a", "128k",
+            "-shortest", "-movflags", "+faststart", output_path]
+
+
+def _render_on_gpu_host(footage_path, audio_path, output_path, overlay_paths, duration):
+    import uuid
+    job_id = uuid.uuid4().hex[:8]
+    remote_dir = f"/tmp/rcvid_{job_id}"
+    ssh = ["ssh", "-i", RENDER_KEY, "-o", "StrictHostKeyChecking=no",
+           f"{RENDER_USER}@{RENDER_HOST}"]
+    scp = ["scp", "-i", RENDER_KEY, "-o", "StrictHostKeyChecking=no"]
+    try:
+        subprocess.run([*ssh, f"mkdir -p {remote_dir}"], check=True, capture_output=True)
+        files = [footage_path, audio_path] + overlay_paths
+        subprocess.run([*scp, *files, f"{RENDER_USER}@{RENDER_HOST}:{remote_dir}/"],
+                       check=True, capture_output=True)
+        remote_footage  = f"{remote_dir}/{Path(footage_path).name}"
+        remote_audio    = f"{remote_dir}/{Path(audio_path).name}"
+        remote_overlays = [f"{remote_dir}/{Path(p).name}" for p in overlay_paths]
+        remote_output   = f"{remote_dir}/output.mp4"
+        cmd = _build_ffmpeg_cmd(remote_footage, remote_audio, remote_output,
+                                remote_overlays, duration, use_nvenc=True)
+        logger.info(f"GPU render on {RENDER_HOST} via NVENC")
+        result = subprocess.run([*ssh, " ".join(cmd)], capture_output=True, text=True)
+        if result.returncode != 0:
+            logger.error(f"Remote ffmpeg error: {result.stderr[-600:]}")
+            return False
+        subprocess.run([*scp, f"{RENDER_USER}@{RENDER_HOST}:{remote_output}", output_path],
+                       check=True, capture_output=True)
+        return Path(output_path).exists()
+    except Exception as e:
+        logger.error(f"GPU render failed: {e}")
+        return False
+    finally:
+        subprocess.run([*ssh, f"rm -rf {remote_dir}"], capture_output=True)
+
+
 def assemble_with_footage(footage_path: str, audio_path: str,
                           output_path: str, script: dict, duration: float) -> bool:
     texts = [script["hook"]] + script.get("points", [])[:3] + [script["cta"]]
     types = ["hook"] + ["point"] * len(script.get("points", [])[:3]) + ["cta"]
     accents = [script.get("title", "")] + [""] * (len(texts) - 1)
-
-    # Estimate per-segment timing proportional to char count
-    chars = [max(len(t), 20) for t in texts]
-    total_chars = sum(chars)
-    usable = duration - 0.4
-    times: list[tuple[float, float]] = []
-    t = 0.2
-    for c in chars:
-        seg_dur = (c / total_chars) * usable
-        times.append((round(t, 2), round(t + seg_dur, 2)))
-        t += seg_dur
 
     with tempfile.TemporaryDirectory() as tmpdir:
         overlay_paths = []
@@ -643,36 +693,17 @@ def assemble_with_footage(footage_path: str, audio_path: str,
             ov.save(p)
             overlay_paths.append(p)
 
-        # Build filter_complex
-        inputs = ["-stream_loop", "-1", "-t", str(duration + 1), "-i", footage_path,
-                  "-i", audio_path]
-        for p in overlay_paths:
-            inputs += ["-loop", "1", "-i", p]
+        if RENDER_HOST:
+            return _render_on_gpu_host(footage_path, audio_path, output_path,
+                                       overlay_paths, duration)
 
-        # Scale/crop footage to 9:16 portrait
-        fc = "[0:v]scale=1080:1920:force_original_aspect_ratio=increase,crop=1080:1920,setsar=1[bg];"
-        prev = "bg"
-        for i, (start, end) in enumerate(times):
-            nxt = f"v{i}"
-            fc += f"[{prev}][{i+2}:v]overlay=0:0:enable='between(t,{start},{end})'[{nxt}];"
-            prev = nxt
-        fc = fc.rstrip(";")
-
-        cmd = [
-            "ffmpeg", "-y",
-            *inputs,
-            "-filter_complex", fc,
-            "-map", f"[{prev}]", "-map", "1:a",
-            "-c:v", "libx264", "-preset", "fast", "-crf", "22",
-            "-c:a", "aac", "-b:a", "128k",
-            "-shortest", "-movflags", "+faststart",
-            output_path,
-        ]
+        # Local CPU fallback
+        cmd = _build_ffmpeg_cmd(footage_path, audio_path, output_path,
+                                overlay_paths, duration, use_nvenc=False)
         result = subprocess.run(cmd, capture_output=True, text=True)
         if result.returncode != 0:
             logger.error(f"FFmpeg footage error: {result.stderr[-600:]}")
         return result.returncode == 0
-
 
 # ── Video generation ──────────────────────────────────────────────────────────
 
