@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 """Create and activate all 4 RingCatch n8n workflows via the REST API."""
-import json, sys, uuid
+import json, os, sys, uuid
 import httpx
 
 N8N   = "http://localhost:5678"
-CREDS = {"email": "molszewski423@gmail.com", "password": "N8N_PASSWORD_FROM_ENV"}
+API_KEY = os.environ["N8N_API_KEY"]
 
 def uid(): return str(uuid.uuid4())[:8]
 
@@ -162,13 +162,7 @@ for wf in WORKFLOWS:
 
 
 def main():
-    with httpx.Client(base_url=N8N, timeout=30) as c:
-        r = c.post("/rest/login", json=CREDS)
-        if r.status_code not in (200, 201):
-            print(f"Login failed {r.status_code}: {r.text[:300]}")
-            sys.exit(1)
-        print("Logged in ✓\n")
-
+    with httpx.Client(base_url=N8N, timeout=30, headers={"X-N8N-API-KEY": API_KEY}) as c:
         for wf in WORKFLOWS:
             r = c.post("/rest/workflows", json=wf)
             if r.status_code not in (200, 201):

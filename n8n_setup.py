@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 """Create and activate all 4 RingCatch n8n workflows (stdlib only — no httpx)."""
-import json, sys, uuid, urllib.request, urllib.error
+import json, os, sys, uuid, urllib.request, urllib.error
 
 N8N     = "http://localhost:5678"
-API_KEY = "N8N_API_KEY_FROM_ENV"
+API_KEY = os.environ["N8N_API_KEY"]
 HDRS    = {"Content-Type": "application/json", "Accept": "application/json", "X-N8N-API-KEY": API_KEY}
 
 def post(path, body=None):
