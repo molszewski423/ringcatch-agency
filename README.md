@@ -1,10 +1,10 @@
 # RingCatch Agency
 
-**AI chatbot agency for US local SMBs - 24 services on k3s**
+**Early-stage AI chatbot agency for US local SMBs - launched May 2026**
 
-RingCatch sells AI chatbots to local small businesses: HVAC companies, plumbers, electricians, dental offices, auto repair shops, law firms. $450 setup + $89/month recurring. Fully automated from lead discovery through client onboarding - the orchestrator AI brain runs the entire pipeline autonomously with Mike as the only human in the loop.
+RingCatch is an early-stage AI chatbot agency for US local SMBs - HVAC, plumbers, electricians, dental, auto repair, law firms. Launched May 2026, pre-revenue, actively in outreach. The full pipeline from lead scraping through booking is built and running - waiting on first clients.
 
-**Business:** Sprint goal 3 paying clients by 2026-06-01. ~1,271 outreach emails sent. Revenue target: $10k MRR.
+**Status:** Pre-revenue. ~1,271 outreach emails sent. Pipeline fully operational.
 
 ---
 
