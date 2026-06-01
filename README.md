@@ -256,6 +256,8 @@ Nginx on `agency-landing` proxies `/api/chat/*` and `/api/track` to `agency-outr
 
 Tunnel ID: `2ef09425-ed87-4c07-a0e4-ecca2041dcdf`
 
+**Infrastructure as code:** DNS records and tunnel ingress config are managed by Terraform in `homelab-infra/terraform/cloudflare/`. The Cloudflare setup is version-controlled and reproducible — `terraform apply` recreates all DNS records and ingress rules from scratch.
+
 ---
 
 ## Key Files
