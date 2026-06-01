@@ -72,8 +72,8 @@ All 24 agency services run on archbox via `nodeSelector: kubernetes.io/hostname:
 
 | Node | Role | LAN IP | Tailscale IP | Hardware |
 |---|---|---|---|---|
-| **mikepc** | Control plane | 192.168.4.54 | 100.97.45.57 | RTX 5060 Ti, Debian 13 |
-| **archbox** | Worker - all agency services | 192.168.4.46 | 100.96.122.27 | i3-4130T, Arch Linux |
+| **mikepc** | Control plane | 192.168.4.54 | Tailscale | RTX 5060 Ti, Debian 13 |
+| **archbox** | Worker - all agency services | 192.168.4.46 | Tailscale | i3-4130T, Arch Linux |
 | **mikeinspiron** | Worker (LAN only) | 192.168.4.33 | - | Inspiron, Debian 13 |
 
 **Manifests:** `~/homelab-infra/k8s/agency.yaml` on mikepc - 24 Deployments + Services + PVCs
@@ -103,7 +103,7 @@ Groq llama-3.1-8b      -- speed-optimized, last resort
 
 The Alex sales chatbot uses `qwen2.5:14b` for tool-calling decisions and `llama3.1:8b` for fast response generation (native tool support).
 
-Ollama endpoint from archbox: `http://100.97.45.57:11434`
+Ollama endpoint from archbox: `http://<mikepc-tailscale-ip>:11434`
 
 ---
 
@@ -114,7 +114,7 @@ Ollama endpoint from archbox: `http://100.97.45.57:11434`
 | **Orchestration** | k3s v1.35 - `agency` namespace, all 24 pods pinned to archbox |
 | **Database** | PostgreSQL 16 (k3s PVC, hostPath to existing Podman volume data) |
 | **LLM primary** | Gemini 2.5 Flash via Gemini API |
-| **LLM fallback** | Ollama gemma4:26b on mikepc RTX 5060 Ti - `http://100.97.45.57:11434` |
+| **LLM fallback** | Ollama gemma4:26b on mikepc RTX 5060 Ti (via Tailscale) |
 | **LLM cloud fallback** | Groq llama-3.3-70b-versatile / llama-3.1-8b-instant |
 | **Chat model** | qwen2.5:14b (tool calls) + llama3.1:8b (Alex persona, fast) |
 | **Email** | Brevo (primary SMTP) + Resend (automatic fallback) |
