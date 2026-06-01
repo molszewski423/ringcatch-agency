@@ -2,7 +2,7 @@
 # Nightly backup of RingCatch agency data to archbox over Tailscale
 set -euo pipefail
 
-REMOTE="mike@100.96.122.27"
+REMOTE="mike@ARCHBOX_HOST"
 REMOTE_DIR="/home/mike/backups/agency"
 DATA_VOL="/home/mike/.local/share/containers/storage/volumes/agency-data/_data"
 AGENCY_DIR="/home/mike/agency"

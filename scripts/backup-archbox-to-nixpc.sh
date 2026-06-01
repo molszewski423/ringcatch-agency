@@ -2,7 +2,7 @@
 # Run on archbox — backs up agency data to MikeNixPC over Tailscale
 set -euo pipefail
 
-REMOTE="mike@100.104.175.99"
+REMOTE="mike@REMOTE_HOST"
 REMOTE_DIR="/home/mike/backups/agency-from-archbox"
 DATA_VOL="$HOME/.local/share/containers/storage/volumes/agency-data/_data"
 LOG="/tmp/agency-backup-to-nixpc.log"

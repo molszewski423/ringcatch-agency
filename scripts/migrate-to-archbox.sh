@@ -45,11 +45,11 @@ rsync -az --no-perms --exclude="*.db" \
 echo ""
 echo "▸ Creating archbox .env (Ollama → MikeNixPC Tailscale)..."
 # On archbox, Ollama fallback points to MikeNixPC over Tailscale
-sed 's|OLLAMA_BASE_URL=http://host.containers.internal:11434|OLLAMA_BASE_URL=http://100.104.175.99:11434|g' \
+sed 's|OLLAMA_BASE_URL=http://host.containers.internal:11434|OLLAMA_BASE_URL=http://REMOTE_HOST:11434|g' \
     "$AGENCY_DIR/.env" > /tmp/archbox.env
 rsync -az --no-perms /tmp/archbox.env "$REMOTE:~/agency/.env"
 rm -f /tmp/archbox.env
-echo "  ✓ .env ready (Ollama → 100.104.175.99)"
+echo "  ✓ .env ready (Ollama → REMOTE_HOST)"
 
 # ── 4. Configure podman on archbox ───────────
 echo ""

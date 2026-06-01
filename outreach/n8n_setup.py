@@ -182,7 +182,7 @@ def main():
         print(f"""
 ─────────────────────────────────────────────────
 Cal.com Webhook URL (add in Cal.com → Settings → Webhooks):
-  http://100.96.122.27:5678/webhook/calcom-booking
+  http://ARCHBOX_HOST:5678/webhook/calcom-booking
 ─────────────────────────────────────────────────
 """)
 

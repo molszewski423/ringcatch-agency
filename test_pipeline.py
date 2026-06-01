@@ -100,7 +100,7 @@ CLIENT_ID = "dave-kowalski"
 DAVE: dict = {
     "business_name": "Arctic Air HVAC",
     "owner_name":    "Dave Kowalski",
-    "email":         "dave@arcticairhvac.com",
+    "email":         "test@example.com",
     "phone":         "704-555-0182",
     "website":       "https://arcticairhvac.com",
     "city":          "Charlotte, NC",
@@ -739,7 +739,7 @@ with stage(S7):
     deliv_row = db.execute("SELECT * FROM deliveries             WHERE client_id=?",  (CLIENT_ID,)).fetchone()
     test_row  = db.execute("SELECT * FROM testimonial_requests   WHERE client_id=?",  (CLIENT_ID,)).fetchone()
 
-    assert lead_row,         "leads: no record for dave@arcticairhvac.com"
+    assert lead_row,         "leads: no record for test@example.com"
     assert len(outs) == 3,   f"outreach: expected 3 rows, got {len(outs)}"
     assert book_row,         f"bookings: no record for {CLIENT_ID}"
     assert pay_row,          f"payments: no record for {CLIENT_ID}"

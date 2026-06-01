@@ -58,7 +58,7 @@ YT_CLIENT_ID    = os.environ.get("YOUTUBE_CLIENT_ID", "")
 YT_CLIENT_SECRET= os.environ.get("YOUTUBE_CLIENT_SECRET", "")
 YT_REFRESH_TOKEN= os.environ.get("YOUTUBE_REFRESH_TOKEN", "")
 DISCORD_URL     = os.environ.get("DISCORD_BOT_URL", "http://agency-discord:8103/alert")
-ARCHBOX_DATA    = "mike@100.96.122.27:/home/mike/.local/share/containers/storage/volumes/agency-data/_data/videos/"
+ARCHBOX_DATA    = "mike@${ARCHBOX_HOST}:/home/mike/.local/share/containers/storage/volumes/agency-data/_data/videos/"
 
 # Font paths (NixOS nix store)
 _FONT_BOLD  = subprocess.run(["fc-match", "DejaVu Sans:bold", "--format=%{file}"],
