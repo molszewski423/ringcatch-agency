@@ -1,73 +1,318 @@
 niches:
-  - "HVAC contractor"
-  - "Plumbing"
-  - "Electrical contractor"
-  - "Roofing contractor"
-  - "Dental office"
-  - "Veterinary clinic"
-  - "Auto repair shop"
-  - "Landscaping company"
-  - "Pest control company"
-  - "Law firm"
-  - "Insurance agency"
-  - "Cleaning service"
-  - "Property management company"
-  - "Real estate agent"
-  - "Hair salon"
-  - "Chiropractor"
-  - "Physical therapist"
-  - "Moving company"
-  - "Pool service"
-  - "Locksmith"
+  - Property Management
+  - Plumbing
+  - HVAC
+  - Pest Control
+  - Electrician
+  - Roofing
+  - Landscaping
+  - Auto Repair
+  - Dental Office
+  - Chiropractic
+  - Law Firm
+  - Insurance Agency
+  - Home Cleaning
+  - Pool Service
+  - Flooring
+  - Tree Service
+  - Painting Contractor
+  - Moving Company
+  - Water Damage Restoration
+  - Garage Door Repair
+  - Appliance Repair
+  - Window Replacement
+  - Kitchen Remodeling
+  - Bathroom Remodeling
+  - Home Remodeling
+  - Solar Installation
+  - Mold Remediation
+  - Junk Removal
+  - Pressure Washing
+  - Carpet Cleaning
+  - Locksmith
+  - Auto Body Shop
+  - Fence Company
+  - Concrete Contractor
+  - Siding Contractor
+  - Septic Service
+  - Fire Damage Restoration
+  - Security System Installation
+  - Veterinarian
+  - Physical Therapy
+  - Med Spa
+  - Orthodontist
+  - Personal Injury Attorney
+  - Mortgage Broker
+  - Pet Grooming
+  - Dog Training
+  - Car Detailing
+  - Towing Service
 
 cities:
-  - "Houston, TX"
-  - "Phoenix, AZ"
-  - "Chicago, IL"
-  - "Philadelphia, PA"
-  - "San Antonio, TX"
-  - "Dallas, TX"
-  - "Miami, FL"
-  - "Atlanta, GA"
-  - "Denver, CO"
-  - "Charlotte, NC"
-  - "Nashville, TN"
-  - "Austin, TX"
-  - "Seattle, WA"
-  - "Las Vegas, NV"
-  - "Tampa, FL"
-  - "Orlando, FL"
-  - "Minneapolis, MN"
-  - "Baltimore, MD"
-  - "Columbus, OH"
-  - "Portland, OR"
-  - "Jacksonville, FL"
-  - "Fort Worth, TX"
-  - "Indianapolis, IN"
-  - "San Jose, CA"
-  - "San Diego, CA"
-  - "Sacramento, CA"
-  - "Oklahoma City, OK"
-  - "El Paso, TX"
-  - "Louisville, KY"
-  - "Memphis, TN"
-  - "Richmond, VA"
-  - "Virginia Beach, VA"
-  - "Raleigh, NC"
-  - "Kansas City, MO"
-  - "Tucson, AZ"
-  - "Albuquerque, NM"
-  - "Mesa, AZ"
-  - "Omaha, NE"
-  - "Colorado Springs, CO"
-  - "Bakersfield, CA"
-  - "Fresno, CA"
-  - "Tulsa, OK"
-  - "Wichita, KS"
-  - "New Orleans, LA"
-  - "Baton Rouge, LA"
-
-max_leads_per_day: 1000
-leads_per_city: 25
-delay_min_seconds: 2
-delay_max_seconds: 6
+  # High-renter-population metros (priority)
+  - New York, NY
+  - Los Angeles, CA
+  - Chicago, IL
+  - Houston, TX
+  - Phoenix, AZ
+  - Philadelphia, PA
+  - San Antonio, TX
+  - San Diego, CA
+  - Dallas, TX
+  - San Jose, CA
+  - Austin, TX
+  - Jacksonville, FL
+  - Fort Worth, TX
+  - Columbus, OH
+  - San Francisco, CA
+  - Charlotte, NC
+  - Indianapolis, IN
+  - Seattle, WA
+  - Denver, CO
+  - Washington, DC
+  - Nashville, TN
+  - Oklahoma City, OK
+  - El Paso, TX
+  - Boston, MA
+  - Memphis, TN
+  - Louisville, KY
+  - Portland, OR
+  - Las Vegas, NV
+  - Milwaukee, WI
+  - Albuquerque, NM
+  - Tucson, AZ
+  - Fresno, CA
+  - Sacramento, CA
+  - Mesa, AZ
+  - Kansas City, MO
+  - Atlanta, GA
+  - Omaha, NE
+  - Colorado Springs, CO
+  - Raleigh, NC
+  - Long Beach, CA
+  - Virginia Beach, VA
+  - Minneapolis, MN
+  - Tampa, FL
+  - New Orleans, LA
+  - Arlington, TX
+  - Bakersfield, CA
+  - Aurora, CO
+  - Anaheim, CA
+  - Corpus Christi, TX
+  - Riverside, CA
+  - St. Louis, MO
+  - Lexington, KY
+  - Pittsburgh, PA
+  - Stockton, CA
+  - Cincinnati, OH
+  - Greensboro, NC
+  - Newark, NJ
+  - Plano, TX
+  - Henderson, NV
+  - Orlando, FL
+  - Lincoln, NE
+  - Jersey City, NJ
+  - Chandler, AZ
+  - Buffalo, NY
+  - Durham, NC
+  - Madison, WI
+  - Lubbock, TX
+  - Norfolk, VA
+  - Winston-Salem, NC
+  - Garland, TX
+  - Glendale, AZ
+  - Hialeah, FL
+  - Reno, NV
+  - Baton Rouge, LA
+  - Irvine, CA
+  - Scottsdale, AZ
+  - North Las Vegas, NV
+  - Fremont, CA
+  - Gilbert, AZ
+  - San Bernardino, CA
+  - Birmingham, AL
+  - Rochester, NY
+  - Richmond, VA
+  - Miami, FL
+  - Oakland, CA
+  - Salt Lake City, UT
+  - Tulsa, OK
+  - Baltimore, MD
+  - Detroit, MI
+  # Mid-size metros — Southeast
+  - Fort Lauderdale, FL
+  - St. Petersburg, FL
+  - Clearwater, FL
+  - Cape Coral, FL
+  - Tallahassee, FL
+  - Gainesville, FL
+  - Lakeland, FL
+  - Sarasota, FL
+  - Fort Myers, FL
+  - Pensacola, FL
+  - Daytona Beach, FL
+  - West Palm Beach, FL
+  - Port St. Lucie, FL
+  - Kissimmee, FL
+  - Huntsville, AL
+  - Mobile, AL
+  - Montgomery, AL
+  - Tuscaloosa, AL
+  - Knoxville, TN
+  - Chattanooga, TN
+  - Clarksville, TN
+  - Murfreesboro, TN
+  - Jackson, MS
+  - Gulfport, MS
+  - Hattiesburg, MS
+  - Augusta, GA
+  - Savannah, GA
+  - Columbus, GA
+  - Macon, GA
+  - Athens, GA
+  - Columbia, SC
+  - Charleston, SC
+  - Greenville, SC
+  - Fayetteville, NC
+  - Cary, NC
+  - Wilmington, NC
+  - High Point, NC
+  - Little Rock, AR
+  - Fayetteville, AR
+  - Fort Smith, AR
+  - Shreveport, LA
+  - Metairie, LA
+  - Lafayette, LA
+  # Mid-size metros — Texas
+  - Laredo, TX
+  - Irving, TX
+  - Amarillo, TX
+  - McKinney, TX
+  - Frisco, TX
+  - Grand Prairie, TX
+  - Brownsville, TX
+  - Killeen, TX
+  - Waco, TX
+  - Midland, TX
+  - Denton, TX
+  - Carrollton, TX
+  - Round Rock, TX
+  - Pearland, TX
+  - Richardson, TX
+  - Lewisville, TX
+  - McAllen, TX
+  - Beaumont, TX
+  - Abilene, TX
+  - Odessa, TX
+  - Tyler, TX
+  # Mid-size metros — Midwest
+  - Cleveland, OH
+  - Akron, OH
+  - Dayton, OH
+  - Toledo, OH
+  - Canton, OH
+  - Grand Rapids, MI
+  - Ann Arbor, MI
+  - Lansing, MI
+  - Sterling Heights, MI
+  - Warren, MI
+  - Dearborn, MI
+  - Flint, MI
+  - Fort Wayne, IN
+  - South Bend, IN
+  - Evansville, IN
+  - Springfield, IL
+  - Peoria, IL
+  - Rockford, IL
+  - Naperville, IL
+  - Joliet, IL
+  - Aurora, IL
+  - Springfield, MO
+  - Independence, MO
+  - Columbia, MO
+  - Wichita, KS
+  - Overland Park, KS
+  - Topeka, KS
+  - Des Moines, IA
+  - Cedar Rapids, IA
+  - Davenport, IA
+  - Sioux City, IA
+  - Green Bay, WI
+  - Racine, WI
+  - Kenosha, WI
+  - Appleton, WI
+  - Rochester, MN
+  - St. Paul, MN
+  - Duluth, MN
+  - Sioux Falls, SD
+  - Rapid City, SD
+  - Fargo, ND
+  - Bismarck, ND
+  - Billings, MT
+  - Missoula, MT
+  - Casper, WY
+  - Cheyenne, WY
+  # Mid-size metros — Mountain West
+  - Boise, ID
+  - Meridian, ID
+  - Nampa, ID
+  - Spokane, WA
+  - Tacoma, WA
+  - Bellevue, WA
+  - Everett, WA
+  - Kent, WA
+  - Eugene, OR
+  - Salem, OR
+  - Gresham, OR
+  - Beaverton, OR
+  - Medford, OR
+  - Las Cruces, NM
+  - Rio Rancho, NM
+  - Santa Fe, NM
+  - Flagstaff, AZ
+  - Tempe, AZ
+  - Peoria, AZ
+  - Surprise, AZ
+  - Yuma, AZ
+  - Fort Collins, CO
+  - Thornton, CO
+  - Lakewood, CO
+  - Westminster, CO
+  - Pueblo, CO
+  - Provo, UT
+  - West Valley City, UT
+  - West Jordan, UT
+  - Ogden, UT
+  - Sandy, UT
+  - Anchorage, AK
+  - Honolulu, HI
+  # Mid-size metros — Northeast
+  - Hartford, CT
+  - Bridgeport, CT
+  - New Haven, CT
+  - Stamford, CT
+  - Providence, RI
+  - Worcester, MA
+  - Springfield, MA
+  - Lowell, MA
+  - Albany, NY
+  - Syracuse, NY
+  - Yonkers, NY
+  - Paterson, NJ
+  - Trenton, NJ
+  - Edison, NJ
+  - Elizabeth, NJ
+  - Wilmington, DE
+  - Frederick, MD
+  - Rockville, MD
+  - Alexandria, VA
+  - Arlington, VA
+  - Chesapeake, VA
+  - Hampton, VA
+  - Newport News, VA
+  - Roanoke, VA
+  - Charleston, WV
+  - Allentown, PA
+  - Erie, PA
+  - Reading, PA
+  - Scranton, PA

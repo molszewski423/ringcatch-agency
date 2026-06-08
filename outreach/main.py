@@ -29,22 +29,23 @@ async def _daily_sent() -> int:
 
 async def _send_due_followups(step: int) -> None:
     # Respect global daily cap across all steps
-    if await _daily_sent() >= EMAIL_DAILY_LIMIT:
-        logger.info(f"Daily email limit reached ({EMAIL_DAILY_LIMIT}), skipping step-{step} follow-ups")
+    if await _daily_sent() >= _calc_daily_limit():
+        logger.info(f"Daily email limit reached, skipping step-{step} follow-ups")
         return
     db = get_db()
     days_back = STEP_DELAY_DAYS.get(step, 999)
     prev_step = step - 1
-    cutoff = (datetime.utcnow() - timedelta(days=days_back)).strftime("%Y-%m-%d")
     due = db.execute("""
         SELECT l.id FROM leads l
         INNER JOIN outreach prev ON prev.lead_id = l.id AND prev.sequence_step = ?
         LEFT JOIN  outreach curr ON curr.lead_id = l.id AND curr.sequence_step = ?
-        WHERE curr.id IS NULL AND prev.sent_at <= ? AND l.email_invalid = 0
-    """, (prev_step, step, cutoff)).fetchall()
+        WHERE curr.id IS NULL
+          AND date(prev.sent_at) <= date('now', ? || ' days')
+          AND l.email_invalid = 0
+    """, (prev_step, step, f"-{days_back}")).fetchall()
     db.close()
     for (lead_id,) in due:
-        if await _daily_sent() >= EMAIL_DAILY_LIMIT:
+        if await _daily_sent() >= _calc_daily_limit():
             logger.info(f"Daily limit hit mid-followup at step {step}, stopping")
             break
         await send_email({"lead_id": lead_id, "step": step})
@@ -66,10 +67,47 @@ async def _autonomous_outreach_loop() -> None:
         await asyncio.sleep(600)  # check every 10 minutes
 
 
+async def _check_brevo_credits() -> None:
+    """Poll Brevo account API and set _brevo_exhausted if credits are 0."""
+    global _brevo_exhausted
+    if not BREVO_API_KEY or BREVO_MONTHLY_LIMIT <= 0:
+        return
+    try:
+        async with httpx.AsyncClient(timeout=10) as client:
+            resp = await client.get(
+                "https://api.brevo.com/v3/account",
+                headers={"api-key": BREVO_API_KEY},
+            )
+        if resp.status_code != 200:
+            return
+        data = resp.json()
+        for plan in data.get("plan", []):
+            if plan.get("creditsType") == "sendLimit" and plan.get("credits", 1) == 0:
+                if not _brevo_exhausted:
+                    logger.warning("Brevo credits exhausted — disabling Brevo routing until plan renews")
+                    _brevo_exhausted = True
+                return
+        # Credits > 0: clear the flag
+        if _brevo_exhausted:
+            logger.info("Brevo credits restored — re-enabling Brevo routing")
+            _brevo_exhausted = False
+    except Exception as exc:
+        logger.warning(f"Brevo credit check failed: {exc}")
+
+
+async def _brevo_credit_monitor() -> None:
+    """Check Brevo credits at startup then every hour."""
+    await _check_brevo_credits()
+    while True:
+        await asyncio.sleep(3600)
+        await _check_brevo_credits()
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     _init_analytics_tables()
     asyncio.create_task(_autonomous_outreach_loop())
+    asyncio.create_task(_brevo_credit_monitor())
     yield
 
 
@@ -85,10 +123,15 @@ CHAT_MODEL    = os.environ.get("CHAT_MODEL", "qwen2.5:7b")
 DEMO_MODEL    = os.environ.get("DEMO_MODEL", OLLAMA_MODEL)
 EMAIL_PROVIDER = os.environ.get("EMAIL_PROVIDER", "stub")
 EMAIL_DAILY_LIMIT = int(os.environ.get("EMAIL_DAILY_LIMIT", "100"))
+BREVO_MONTHLY_LIMIT = int(os.environ.get("BREVO_MONTHLY_LIMIT", "0"))
+RESEND_MONTHLY_LIMIT = int(os.environ.get("RESEND_MONTHLY_LIMIT", "3000"))
 GROQ_API_KEY       = os.environ.get("GROQ_API_KEY", "")
 GROQ_QUALITY_MODEL = os.environ.get("GROQ_MODEL", "llama-3.3-70b-versatile")
 GROQ_FAST_MODEL    = os.environ.get("GROQ_FAST_MODEL", "llama-3.1-8b-instant")
 GROQ_URL           = "https://api.groq.com/openai/v1/chat/completions"
+_resend_daily_quota_hit: bool = False  # set True on 429, auto-resets next day
+_resend_quota_reset_date: str = ""      # date string when flag was set
+_brevo_exhausted: bool = False          # set True when Brevo account credits == 0
 GEMINI_API_KEY     = os.environ.get("GEMINI_API_KEY", "")
 GEMINI_MODEL       = os.environ.get("GEMINI_MODEL", "gemini-2.5-flash")
 GEMINI_URL         = "https://generativelanguage.googleapis.com/v1beta/openai/chat/completions"
@@ -113,9 +156,9 @@ async def _llm(prompt: str, max_tokens: int = 400) -> str:
         except Exception as e:
             logger.warning(f"Groq {GROQ_FAST_MODEL} failed: {e}")
 
-    # 2. Ollama — local, no rate limits (fast on GPU; 3s fail-fast until GPU fixed)
+    # 2. Ollama — local, no rate limits
     try:
-        async with httpx.AsyncClient(timeout=3) as c:
+        async with httpx.AsyncClient(timeout=30) as c:
             r = await c.post(
                 f"{OLLAMA_URL}/api/generate",
                 json={"model": OLLAMA_MODEL, "prompt": prompt, "stream": False},
@@ -241,7 +284,31 @@ STRIPE_SETUP_LINK   = os.environ.get("STRIPE_SETUP_LINK", "https://ringcatch.io"
 STRIPE_MONTHLY_LINK = os.environ.get("STRIPE_MONTHLY_LINK", "https://ringcatch.io")
 
 VIDEO_DIR = Path("/data/videos")
-# Maps lowercase keyword fragments → canonical video niche names (must match video/main.py NICHE_QUERIES keys)
+
+# Fallback SUGGEST chips when LLM omits SUGGEST block — keyed by lowercase fragment of business type
+_NICHE_CHALLENGE_CHIPS: dict[str, list[str]] = {
+    "property": ["Missed after-hours calls", "Maintenance emergencies", "Vacancy inquiries", "Tenant no-shows"],
+    "hvac":     ["After-hours emergencies", "Missed calls on jobs", "Slow season gaps", "Competitor response speed"],
+    "plumb":    ["Emergency calls after hours", "Missed leads on jobs", "Weekend no-answers", "Quoting delays"],
+    "dental":   ["After-hours appointment requests", "New patient no-shows", "Insurance questions after close", "Competitor response time"],
+    "auto":     ["Missed calls while in bays", "After-hours service questions", "Estimate follow-ups", "Weekend inquiries"],
+    "law":      ["Urgent after-hours calls", "New client response time", "Weekend inquiries", "Follow-up delays"],
+    "salon":    ["Last-minute booking requests", "After-hours appointment calls", "No-show follow-ups", "Staff schedule gaps"],
+    "landscap": ["Seasonal estimate requests", "After-hours project questions", "Missed referral calls", "Weekend inquiries"],
+    "restaur":  ["Reservation requests after close", "Catering inquiry delays", "Missed call-ahead orders", "Weekend staffing gaps"],
+    "pest":     ["Emergency infestation calls", "After-hours quote requests", "Missed follow-ups", "Weekend response time"],
+    "realtor":  ["After-hours showing requests", "Weekend inquiry response", "Missed buyer calls", "Follow-up timing"],
+}
+_DEFAULT_CHALLENGE_CHIPS = ["Missed calls after hours", "Slow response time", "Weekend inquiries", "Lost leads to competitors"]
+
+def _challenge_chips_for_biz(biz_type: str) -> list[str]:
+    low = biz_type.lower()
+    for key, chips in _NICHE_CHALLENGE_CHIPS.items():
+        if key in low:
+            return chips
+    return _DEFAULT_CHALLENGE_CHIPS
+
+# Maps lowercase keyword fragments → canonical video niche names (must match video/main.py NICHE_QUERIES keys) → canonical video niche names (must match video/main.py NICHE_QUERIES keys)
 _NICHE_VIDEO_KEYS = {
     "hvac": "HVAC", "plumb": "Plumbing", "dental": "Dental", "dentist": "Dental",
     "auto repair": "Auto Repair", "auto": "Auto Repair", "mechanic": "Auto Repair",
@@ -280,15 +347,25 @@ DISCORD_URL  = os.environ.get("DISCORD_BOT_URL", "http://agency-discord:8103/ale
 chat_sessions: dict = {}
 def _parse_suggestions(text: str) -> tuple:
     """Strip SUGGEST: [...] block from LLM reply. Returns (clean_text, list_of_options)."""
+    import json as _json
+    # Bracketed format: SUGGEST: ["a", "b"] or SUGGEST: [a, b]
     m = re.search(r'SUGGEST:\s*(\[.*?\])', text, re.DOTALL)
-    if not m:
-        return text.strip(), []
-    try:
-        opts = __import__('json').loads(m.group(1))
-        opts = [str(o).strip() for o in opts if str(o).strip()][:4]
-    except Exception:
-        return text.strip(), []
-    return text[:m.start()].strip(), opts
+    if m:
+        clean = text[:m.start()].strip()
+        try:
+            opts = _json.loads(m.group(1))
+            opts = [str(o).strip() for o in opts if str(o).strip()][:4]
+        except Exception:
+            raw = m.group(1).strip()[1:-1]
+            opts = [o.strip().strip('"\'') for o in raw.split(',') if o.strip()][:4]
+        return clean, opts
+    # Unbracketed fallback: SUGGEST: item1, item2, item3
+    m2 = re.search(r'SUGGEST:\s*([^\n\[]+)', text)
+    if m2:
+        clean = text[:m2.start()].strip()
+        opts = [o.strip().strip('"\'') for o in m2.group(1).split(',') if o.strip()][:4]
+        return clean, opts
+    return text.strip(), []
 
 
 
@@ -560,7 +637,8 @@ These questions are calibrated for {industry} businesses like {biz}:
 {qs_block}
 Use these as inspiration, not a script — adapt to what they've already told you. Be genuinely curious. Max 40 words.
 Then on a new line write exactly: SUGGEST: ["2-5 word answer 1", "2-5 word answer 2", "2-5 word answer 3"]
-Options must be realistic short answers a {industry} owner would actually say — never generic.""",
+Options must be realistic short answers a {industry} owner would actually say — never generic.
+NEVER start with "I'm Alex" — they already know. NEVER reference the day of the week or time of day.""",
 
         2: f"""CURRENT PHASE: Demo Transition
 You've heard their situation. Their main pain: "{pain}"
@@ -731,6 +809,8 @@ def _init_analytics_tables():
         "ALTER TABLE outreach ADD COLUMN spam_flag INTEGER DEFAULT 0",
         "ALTER TABLE outreach ADD COLUMN replied_at TEXT",
         "ALTER TABLE leads ADD COLUMN email_invalid INTEGER DEFAULT 0",
+        "ALTER TABLE outreach ADD COLUMN provider TEXT",
+        "ALTER TABLE chat_analytics ADD COLUMN name TEXT",
     ]:
         try:
             db.execute(col_sql)
@@ -874,15 +954,18 @@ async def send_email(payload: dict):
         logger.warning(f"Skipping duplicate send: lead {lead_id} step {step}")
         return {"status": "already_sent", "step": step}
 
+    if _route_provider() in ("exhausted", "stub"):
+        logger.info(f"Email provider exhausted/stub — skipping LLM generation for lead {lead_id}")
+        return {"status": "exhausted"}
     body = await _generate_email(lead, step)
     ok = await _dispatch_email(lead, body, step)
 
     if ok:
         db = get_db()
         db.execute("""
-            INSERT INTO outreach (lead_id, email, email_body, sequence_step, sent_at)
-            VALUES (?, ?, ?, ?, datetime('now'))
-        """, (lead_id, lead["email"], body, step))
+            INSERT INTO outreach (lead_id, email, email_body, sequence_step, sent_at, provider)
+            VALUES (?, ?, ?, ?, datetime('now'), ?)
+        """, (lead_id, lead["email"], body, step, lead.get("_provider", "resend")))
         if step == 1:
             db.execute(
                 "UPDATE leads SET pipeline_stage='emailed' WHERE id=? AND pipeline_stage='scraped'",
@@ -1030,6 +1113,12 @@ async def chat_message(payload: dict, background_tasks: BackgroundTasks):
         session["escalation_pending"] = False
         background_tasks.add_task(_send_escalation_alert, dict(session), user_message)
 
+    # If this looks like a business-type chip tap (short, matches a known industry),
+    # update the session's industry so responses stay on-niche.
+    if len(user_message) <= 30 and not lead.get("industry"):
+        lead["industry"] = user_message.lower()
+        lead["business_name"] = user_message
+
     history.append({"role": "user", "content": user_message})
 
     # --- Phase progression logic ---
@@ -1097,10 +1186,14 @@ async def chat_message(payload: dict, background_tasks: BackgroundTasks):
     history.append({"role": "alex", "content": reply})
     demo_active = phase in (2, 3)
 
-    # Detect email in user message
-    import re
+    # Detect email, phone, and name in user message
     email_match = re.search(r"[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}", user_message)
     captured_email = email_match.group(0) if email_match else None
+    phone_match = re.search(r"\b(\+?1[\s.-]?)?\(?\d{3}\)?[\s.-]?\d{3}[\s.-]?\d{4}\b|\b\d{3}[\s.-]\d{4}\b", user_message)
+    captured_phone = phone_match.group(0).strip() if phone_match else None
+    # Simple name: first capitalised word before "at" or "," or standalone if short
+    name_match = re.match(r"^([A-Z][a-z]+(?:\s+[A-Z][a-z]+)?)\b", user_message.strip())
+    captured_name = name_match.group(1) if name_match else None
 
     # Update analytics
     db = get_db()
@@ -1113,6 +1206,12 @@ async def chat_message(payload: dict, background_tasks: BackgroundTasks):
     if captured_email:
         update_fields.append("email_captured = ?")
         params.append(captured_email)
+    if captured_phone:
+        update_fields.append("phone = ?")
+        params.append(captured_phone)
+    if captured_name:
+        update_fields.append("name = ?")
+        params.append(captured_name)
     params.append(sid)
     db.execute(
         f"UPDATE chat_analytics SET {', '.join(update_fields)} WHERE session_id = ?",
@@ -1120,6 +1219,21 @@ async def chat_message(payload: dict, background_tasks: BackgroundTasks):
     )
     db.commit()
     db.close()
+
+    # Fire Discord alert when contact info is captured
+    if captured_phone or captured_email:
+        lead = session.get("lead", {})
+        biz = lead.get("business_name", "Unknown")
+        contact_name = captured_name or lead.get("name", "Unknown")
+        contact_line = f"📞 {captured_phone}" if captured_phone else ""
+        if captured_email:
+            contact_line += f"  ✉️ {captured_email}"
+        asyncio.create_task(_discord_post(
+            f"**🔥 Contact info captured!**\n"
+            f"**{contact_name}** — {biz}\n"
+            f"{contact_line}\n"
+            f"Session: {sid[:8]}"
+        ))
 
     logger.info(f"Chat {sid[:8]} turn={turn} phase={phase} model={model.split(':')[0]}")
     reply, suggestions = _parse_suggestions(reply)
@@ -1172,9 +1286,14 @@ async def api_chat(payload: dict, background_tasks: BackgroundTasks):
         )
         db.commit()
         db.close()
+        asyncio.create_task(_discord_post(
+            f"💬 **New conversation started**\n"
+            f"Niche: {_biz_type or 'unknown'}\n"
+            f"Session: {new_sid[:8]}"
+        ))
         opener, suggestions = _parse_suggestions(opener)
         if not suggestions:
-            suggestions = ["Plumbing / HVAC", "Landscaping", "Restaurant / Café", "Salon / Spa", "Other"]
+            suggestions = _challenge_chips_for_biz(_biz_type) if _biz_type else ["HVAC", "Plumbing", "Property Mgmt", "Dental", "Other"]
         return {"response": opener, "session_id": new_sid, "phase": 1, "demo_active": False, "suggestions": suggestions}
 
     # Existing session — delegate to chat_message
@@ -1567,9 +1686,10 @@ async def _send_step1_to_new_leads() -> None:
     sent_today = db.execute(
         "SELECT COUNT(*) FROM outreach WHERE date(sent_at,'localtime')=date('now','localtime')"
     ).fetchone()[0]
-    remaining = EMAIL_DAILY_LIMIT - sent_today
+    daily_limit = _calc_daily_limit()
+    remaining = daily_limit - sent_today
     if remaining <= 0:
-        logger.info(f"Daily email limit reached ({EMAIL_DAILY_LIMIT}), skipping step-1 sends")
+        logger.info(f"Daily email limit reached ({daily_limit} today, {BREVO_MONTHLY_LIMIT + RESEND_MONTHLY_LIMIT} combined monthly), skipping step-1 sends")
         db.close()
         return
     new = db.execute("""
@@ -1673,6 +1793,29 @@ async def _generate_email(lead: dict, step: int) -> str:
         return FALLBACK_BODIES.get(step, FALLBACK_BODIES[1])
 
 
+def _build_yt_block(video_url: str | None, niche: str) -> str:
+    if not video_url:
+        return ""
+    vid_id = video_url.split("/")[-1]
+    niche_label = niche or "Local"
+    thumb = "https://img.youtube.com/vi/" + vid_id + "/hqdefault.jpg"
+    title = "How AI Chatbots Help " + niche_label + " Businesses"
+    return (
+        "<tr><td style='padding:0 28px 16px;'>"
+        "<a href='" + video_url + "' style='display:block;text-decoration:none;border-radius:10px;overflow:hidden;'>"
+        "<div style='position:relative;'>"
+        "<img src='" + thumb + "' width='504' alt='" + title + "' "
+        "style='display:block;width:100%;border-radius:10px 10px 0 0;border:0;' />"
+        "<div style='position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);"
+        "background:rgba(0,0,0,0.65);border-radius:50%;width:52px;height:52px;text-align:center;line-height:52px;'>"
+        "<span style='color:#fff;font-size:1.5rem;'>&#9654;</span></div></div>"
+        "<div style='background:#0b0b14;padding:10px 14px;border-radius:0 0 10px 10px;'>"
+        "<span style='font-size:0.85rem;font-weight:700;color:#ffffff;display:block;'>" + title + "</span>"
+        "<span style='font-size:0.75rem;color:#22d3ee;'>Watch on YouTube &#x2197;</span>"
+        "</div></a></td></tr>"
+    )
+
+
 def _build_email_html(body: str, video_url: str | None = None, niche: str = "", demo_url: str = "") -> str:
     """Wrap plain-text email body in branded RingCatch HTML template."""
     _cta = demo_url or DEMO_BASE_URL
@@ -1710,18 +1853,8 @@ def _build_email_html(body: str, video_url: str | None = None, niche: str = "", 
         "</td></tr>"
         # Body
         f"<tr><td style='padding:28px 28px 8px;'>{html_body}</td></tr>"
-        # Video link (niche-specific YouTube short, only when available)
-        + (
-            f"<tr><td style='padding:0 28px 16px;'>"
-            f"<a href='{video_url}' style='display:block;background:#f8fafc;border:1px solid #e2e8f0;"
-            f"border-radius:8px;padding:14px 16px;text-decoration:none;'>"
-            f"<span style='display:block;font-size:0.75rem;color:#64748b;font-weight:600;letter-spacing:0.05em;margin-bottom:4px;'>📹 WATCH</span>"
-            f"<span style='font-size:0.9rem;font-weight:700;color:#1e293b;'>"
-            f"How AI Chatbots Help {niche or 'Local'} Businesses</span>"
-            f"<span style='display:block;font-size:0.78rem;color:#22d3ee;margin-top:3px;'>youtube.com ↗</span>"
-            f"</a></td></tr>"
-            if video_url else ""
-        )
+        # Video thumbnail (niche-specific YouTube short, only when available)
+        + _build_yt_block(video_url, niche)
         # CTA button
         + f"<tr><td style='padding:8px 28px 28px;'>"
         f"<a href='{_cta}' style='display:inline-block;background:#22d3ee;color:#0b0b14;"
@@ -1733,12 +1866,66 @@ def _build_email_html(body: str, video_url: str | None = None, niche: str = "", 
         "<tr><td style='background:#f8fafc;padding:16px 28px;border-top:1px solid #e2e8f0;'>"
         "<p style='margin:0;font-size:0.74rem;color:#64748b;line-height:1.6;'>"
         "Alex · RingCatch · <a href='https://ringcatch.io' style='color:#22d3ee;text-decoration:none;'>ringcatch.io</a><br>"
-        "222 Tackle Box Dr, Troutman NC 28166<br>"
         "You're receiving this because you operate a local service business.<br>"
         "<a href='mailto:alex@ringcatch.io?subject=unsubscribe' style='color:#94a3b8;'>Unsubscribe</a>"
         "</p></td></tr>"
         "</table></td></tr></table></body></html>"
     )
+
+
+def _calc_daily_limit() -> int:
+    """Pace emails evenly across the month: remaining_budget / days_left.
+    When Brevo is disabled, budget only against Resend sends to avoid counting
+    Brevo historical sends against Resend's separate monthly limit."""
+    today = date.today()
+    if today.month == 12:
+        month_end = date(today.year + 1, 1, 1)
+    else:
+        month_end = date(today.year, today.month + 1, 1)
+    days_left = max(1, (month_end - today).days)
+    db = get_db()
+    brevo_active = BREVO_MONTHLY_LIMIT > 0 and not _brevo_exhausted
+    if brevo_active:
+        total_monthly = BREVO_MONTHLY_LIMIT + RESEND_MONTHLY_LIMIT
+        sent_this_month = db.execute(
+            "SELECT COUNT(*) FROM outreach WHERE sent_at >= date('now','start of month')"
+        ).fetchone()[0]
+    else:
+        total_monthly = RESEND_MONTHLY_LIMIT
+        sent_this_month = db.execute(
+            "SELECT COUNT(*) FROM outreach WHERE provider='resend' AND sent_at >= date('now','start of month')"
+        ).fetchone()[0]
+    db.close()
+    remaining = max(0, total_monthly - sent_this_month)
+    daily = remaining // days_left
+    return min(daily, 250)  # hard cap: never more than 250/day
+
+
+def _route_provider() -> str:
+    """Pick brevo or resend based on monthly send counts vs configured limits."""
+    global _resend_daily_quota_hit
+    # Auto-reset quota flag at midnight
+    if _resend_daily_quota_hit and _resend_quota_reset_date != date.today().isoformat():
+        _resend_daily_quota_hit = False
+        logger.info("Resend daily quota flag auto-reset for new day")
+    if EMAIL_PROVIDER == "stub":
+        return "stub"
+    if BREVO_MONTHLY_LIMIT <= 0 or _brevo_exhausted:
+        return "resend"
+    db = get_db()
+    brevo_sent = db.execute(
+        "SELECT COUNT(*) FROM outreach WHERE provider='brevo' AND sent_at >= date('now','start of month')"
+    ).fetchone()[0]
+    resend_sent = db.execute(
+        "SELECT COUNT(*) FROM outreach WHERE provider='resend' AND sent_at >= date('now','start of month')"
+    ).fetchone()[0]
+    db.close()
+    if brevo_sent < BREVO_MONTHLY_LIMIT:
+        return "brevo"
+    if resend_sent < RESEND_MONTHLY_LIMIT and not _resend_daily_quota_hit:
+        return "resend"
+    logger.warning("Both provider monthly limits reached or daily quota hit — no email sent")
+    return "exhausted"
 
 
 async def _dispatch_email(lead: dict, body: str, step: int) -> bool:
@@ -1756,20 +1943,19 @@ async def _dispatch_email(lead: dict, body: str, step: int) -> bool:
         city=lead.get("city", "your area")
     )
 
-    if EMAIL_PROVIDER == "stub":
+    provider = _route_provider()
+    lead["_provider"] = provider
+
+    if provider == "stub":
         return _stub_send(lead, subject, body, step)
-
-    if EMAIL_PROVIDER == "brevo":
-        sent = await _send_via_brevo(lead, subject, body, step)
-        if not sent and RESEND_API_KEY:
-            logger.warning("Brevo send failed — falling back to Resend")
-            return await _send_via_resend(lead, subject, body, step)
-        return sent
-
-    if EMAIL_PROVIDER == "resend":
+    if provider == "brevo":
+        return await _send_via_brevo(lead, subject, body, step)
+    if provider == "resend":
         return await _send_via_resend(lead, subject, body, step)
+    if provider == "exhausted":
+        return False
 
-    logger.error(f"Unknown EMAIL_PROVIDER '{EMAIL_PROVIDER}' — no email sent")
+    logger.error(f"Unknown provider '{provider}' — no email sent")
     return False
 
 
@@ -1866,7 +2052,7 @@ async def _send_via_resend(lead: dict, subject: str, body: str, step: int = 1) -
             demo_url=_demo_url(lead.get("niche", "")),
         ),
         "tags": [
-            {"name": "niche", "value": lead.get("niche", "outreach")},
+            {"name": "niche", "value": re.sub(r"[^a-zA-Z0-9_-]", "_", lead.get("niche", "outreach"))},
             {"name": "step", "value": str(step)},
         ],
     }
@@ -1876,7 +2062,12 @@ async def _send_via_resend(lead: dict, subject: str, body: str, step: int = 1) -
             json=payload,
             headers={"Authorization": f"Bearer {RESEND_API_KEY}", "Content-Type": "application/json"},
         )
-    if resp.status_code != 200:
+    global _resend_daily_quota_hit, _resend_quota_reset_date
+    if resp.status_code == 429:
+        _resend_daily_quota_hit = True
+        _resend_quota_reset_date = date.today().isoformat()
+        logger.warning("Resend daily quota exhausted — halting email generation until midnight")
+    elif resp.status_code != 200:
         logger.error(f"Resend error {resp.status_code}: {resp.text[:200]}")
     else:
         logger.info(f"Resend sent step-{step} to {lead['email']}")

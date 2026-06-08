@@ -452,6 +452,11 @@ def tool_get_business_metrics() -> dict:
         hot_leads = safe("SELECT COUNT(*) FROM leads WHERE qualified='hot'")
         warm_leads = safe("SELECT COUNT(*) FROM leads WHERE qualified='warm'")
         emails_today = safe("SELECT COUNT(*) FROM outreach WHERE date(sent_at,'localtime')=date('now','localtime')")
+        leads_scraped_today = safe("SELECT COUNT(*) FROM leads WHERE scraped_date=date('now')")
+        total_emails_sent = safe("SELECT COUNT(*) FROM outreach")
+        replied_count = safe("SELECT COUNT(*) FROM leads WHERE pipeline_stage='replied'")
+        reply_rate = round(replied_count / max(total_emails_sent, 1) * 100, 2)
+        pending_events = safe("SELECT COUNT(*) FROM event_bus WHERE status='pending'")
 
         stages = {}
         try:
@@ -469,6 +474,9 @@ def tool_get_business_metrics() -> dict:
             "mrr": mrr, "arr": mrr * 12, "active_clients": active_clients,
             "total_leads": total_leads, "hot_leads": hot_leads, "warm_leads": warm_leads,
             "emails_today": emails_today, "email_limit": EMAIL_DAILY_LIMIT,
+            "leads_scraped_today": leads_scraped_today,
+            "total_emails_sent": total_emails_sent,
+            "reply_rate": reply_rate, "pending_events": pending_events,
             "pipeline_stages": stages, "agents": agents,
             "as_of": fmt_et()
         }
@@ -663,7 +671,7 @@ async def tool_diagnose_pipeline() -> str:
         if a["status"] != "online":
             if a["name"] == "ollama":
                 issues.append(f"❌ Ollama is OFFLINE or UNREACHABLE")
-                suggestions.append("→ Check if Ollama is running on MikeNixPC: `podman ps | grep ollama` and `podman restart ollama` if needed.")
+                suggestions.append("→ Check Ollama pod on MikePC: `kubectl get pod -n ai -l app=ollama` and restart if needed.")
             else:
                 issues.append(f"❌ Agent OFFLINE: {a['name']} — {a.get('error','')[:100]}")
                 suggestions.append(f"→ Run get_agent_logs('{a['name']}') to diagnose or restart_agent('{a['name'].replace('agency-','')}')")
@@ -707,22 +715,26 @@ async def tool_get_conversion_analytics() -> str:
             "SELECT COUNT(*) FROM outreach WHERE date(sent_at,'localtime')=date('now','localtime')"
         ).fetchone()[0]
         total_emails = db.execute("SELECT COUNT(*) FROM outreach").fetchone()[0]
-        # Chat sessions (demo starts) — approximate from activity log
+        # Demo starts from chat_analytics (phase >= 3 = reached live demo)
         demo_starts = db.execute(
-            "SELECT COUNT(*) FROM activity_log WHERE event_type='chat_start'"
-        ).fetchone()[0] if _table_exists(db, "activity_log") else "unknown"
+            "SELECT COUNT(*) FROM chat_analytics WHERE phase_reached >= 3"
+        ).fetchone()[0] if _table_exists(db, "chat_analytics") else "unknown"
+        # Active clients from clients table (not pipeline_stage)
+        active_clients = db.execute(
+            "SELECT COUNT(*) FROM clients WHERE status='active'"
+        ).fetchone()[0]
         db.close()
         funnel = (
             f"Conversion funnel:\n"
-            f"  Leads scraped:  {rows['total_leads']}\n"
+            f"  Leads scraped:  {rows[0]}\n"
             f"  Emails sent:    {total_emails} (today: {emails_today})\n"
-            f"  Replied:        {rows['replied']}\n"
+            f"  Replied:        {rows[2]}\n"
             f"  Demo chats:     {demo_starts}\n"
-            f"  Paying clients: {rows['clients']}\n"
+            f"  Paying clients: {active_clients}\n"
         )
-        if rows["total_leads"] and rows["emailed"]:
-            reply_rate = round(rows["replied"] / max(rows["emailed"], 1) * 100, 1)
-            close_rate = round(rows["clients"] / max(rows["replied"], 1) * 100, 1) if rows["replied"] else 0
+        if rows[0] and rows[1]:
+            reply_rate = round(rows[2] / max(rows[1], 1) * 100, 1)
+            close_rate = round(active_clients / max(rows[2], 1) * 100, 1) if rows[2] else 0
             funnel += f"  Reply rate: {reply_rate}% | Close rate (reply→paid): {close_rate}%"
         return funnel
     except Exception as e:
@@ -787,8 +799,9 @@ def build_live_context() -> str:
         stage_str = " | ".join(f"{k}:{v}" for k, v in stages.items()) or "empty"
         lines = [
             f"\n\n## Live System State — {now}",
-            f"MRR ${m['mrr']:.0f} | Clients {m['active_clients']} | Leads {m['total_leads']} ({stage_str})",
-            f"Emails today {m['emails_today']}/{m['email_limit']}",
+            f"MRR ${m['mrr']:.0f} | Clients {m['active_clients']} | Leads {m['total_leads']} | Scraped today {m['leads_scraped_today']}",
+            f"Pipeline queue: {stage_str}",
+            f"Emails today {m['emails_today']}/{m['email_limit']} | Reply rate {m['reply_rate']}% | Pending events {m['pending_events']}",
         ]
         if activity:
             lines.append("### Recent activity")
@@ -1416,9 +1429,10 @@ async def _send_daily_discord_digest() -> None:
 
         msg = (
             f"☀️ **RingCatch Morning Digest — {now_et().strftime('%Y-%m-%d')}**\n"
-            f"MRR `${m['mrr']:.0f}` | Clients `{m['active_clients']}` | Leads `{m['total_leads']}`\n"
-            f"Pipeline: {stage_str}\n"
-            f"Emails today: `{m['emails_today']}/{m['email_limit']}`\n\n"
+            f"MRR `${m['mrr']:.0f}` | Clients `{m['active_clients']}` | Total leads `{m['total_leads']}`\n"
+            f"Scraped today: `{m['leads_scraped_today']}` | Reply rate: `{m['reply_rate']}%`\n"
+            f"Pipeline stages (queue): {stage_str}\n"
+            f"Emails today: `{m['emails_today']}/{m['email_limit']}` | Total sent: `{m.get('total_emails_sent', 0)}`\n\n"
             f"**Overnight activity:**\n{recent_text}"
         )
         async with httpx.AsyncClient(timeout=10) as client:
@@ -1456,9 +1470,10 @@ async def _send_health_report() -> None:
         f"**🔍 Periodic Health Report** — {now_str}\n\n"
         f"**{status_line}**\n{agent_lines}\n\n"
         f"**📊 Pipeline**\n"
-        f"• {metrics.get('total_leads', 0)} leads · {metrics.get('emails_today', 0)} emails today · "
+        f"• {metrics.get('total_leads', 0)} leads total · {metrics.get('leads_scraped_today', 0)} scraped today\n"
+        f"• {metrics.get('emails_today', 0)}/{metrics.get('email_limit', 0)} emails today · "
         f"{metrics.get('active_clients', 0)} clients · MRR ${metrics.get('mrr', 0):.0f}\n"
-        f"• Reply rate: {metrics.get('reply_rate', 0)}%"
+        f"• Reply rate: {metrics.get('reply_rate', 0)}% · Pending events: {metrics.get('pending_events', 0)}"
     )
     if issues:
         msg += "\n\n**⚠️ Issues Detected**\n" + "\n".join(issues)

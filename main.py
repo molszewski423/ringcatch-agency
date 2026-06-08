@@ -1815,7 +1815,6 @@ def _build_email_html(body: str, video_url: str | None = None, niche: str = "", 
         "<tr><td style='background:#f8fafc;padding:16px 28px;border-top:1px solid #e2e8f0;'>"
         "<p style='margin:0;font-size:0.74rem;color:#64748b;line-height:1.6;'>"
         "Alex · RingCatch · <a href='https://ringcatch.io' style='color:#22d3ee;text-decoration:none;'>ringcatch.io</a><br>"
-        "222 Tackle Box Dr, Troutman NC 28166<br>"
         "You're receiving this because you operate a local service business.<br>"
         "<a href='mailto:alex@ringcatch.io?subject=unsubscribe' style='color:#94a3b8;'>Unsubscribe</a>"
         "</p></td></tr>"

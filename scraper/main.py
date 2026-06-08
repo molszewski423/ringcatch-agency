@@ -308,7 +308,7 @@ async def _scrape_all(targets: list[dict]) -> None:
 
             db = get_db()
             try:
-                db.execute("""
+                cur = db.execute("""
                     INSERT OR IGNORE INTO leads
                         (business_name, email, phone, website, domain, address, city, niche,
                          scraped_date, score, has_chatbot, chatbot_type, cms, has_google_ads,
@@ -324,8 +324,10 @@ async def _scrape_all(targets: list[dict]) -> None:
                     lead.get("gbp_rating"), lead.get("gbp_review_count"),
                 ))
                 db.commit()
-                daily_count += 1
-                all_new.append(lead)
+                if cur.lastrowid:
+                    lead["id"] = cur.lastrowid
+                    daily_count += 1
+                    all_new.append(lead)
             except Exception as exc:
                 logger.warning(f"DB insert failed: {exc}")
             finally:
@@ -345,6 +347,7 @@ async def _scrape_all(targets: list[dict]) -> None:
                     INSERT INTO event_bus (source_agent, target_agent, event_type, priority, payload)
                     VALUES ('agency-scraper', 'agency-sales', 'NEW_LEAD', 2, ?)
                 """, (json.dumps({
+                    "lead_id":       lead.get("id"),
                     "business_name": lead.get("business_name"),
                     "email":         lead.get("email"),
                     "niche":         lead.get("niche"),

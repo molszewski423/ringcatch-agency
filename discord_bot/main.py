@@ -104,8 +104,10 @@ async def _http_alert(request: web.Request) -> web.Response:
         return web.Response(status=400, text="no content")
     if _alerts_channel is None:
         return web.Response(status=503, text="channel not ready")
-    for chunk in split_message(str(text)):
-        await _alerts_channel.send(chunk)
+    mention = f"<@{OWNER_DISCORD_ID}> " if OWNER_DISCORD_ID else ""
+    chunks = split_message(str(text))
+    for i, chunk in enumerate(chunks):
+        await _alerts_channel.send((mention if i == 0 else "") + chunk)
     return web.Response(status=204)
 
 

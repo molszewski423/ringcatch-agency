@@ -11,5 +11,8 @@ COPY book.html     /usr/share/nginx/html/book.html
 COPY bimi-logo.svg /usr/share/nginx/html/bimi-logo.svg
 COPY logo.svg      /usr/share/nginx/html/logo.svg
 COPY logo.svg      /usr/share/nginx/html/favicon.svg
+COPY privacy.html  /usr/share/nginx/html/privacy.html
+COPY terms.html    /usr/share/nginx/html/terms.html
+COPY img/          /usr/share/nginx/html/img/
 
 EXPOSE 8090

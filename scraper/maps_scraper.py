@@ -224,23 +224,6 @@ async def hunter_lookup(domain: str, api_key: str) -> str:
         except Exception as e:
             logger.debug("Hunter lookup failed for %s: %s", domain, e)
 
-    # 2. Prospeo — 75 free searches/month, no key needed for basic lookup
-    try:
-        async with httpx.AsyncClient(timeout=10) as client:
-            resp = await client.get(
-                "https://api.prospeo.io/domain-search",
-                params={"domain": domain, "limit": 1},
-                headers={"X-KEY": os.environ.get("PROSPEO_API_KEY", "")},
-            )
-        if resp.status_code == 200:
-            emails = resp.json().get("response", {}).get("email_list", [])
-            for entry in emails:
-                addr = entry.get("email", "")
-                if addr and entry.get("email_status") in ("VALID", "ACCEPT_ALL"):
-                    return addr.lower()
-    except Exception as e:
-        logger.debug("Prospeo lookup failed for %s: %s", domain, e)
-
     return ""
 
 

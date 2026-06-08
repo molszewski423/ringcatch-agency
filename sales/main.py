@@ -270,9 +270,20 @@ async def poll_event_bus(db):
         payload = json.loads(ev["payload"] or "{}")
         lead_id = payload.get("lead_id")
         if not lead_id:
+            # fallback: look up by email for events published before lead_id was included
+            email = payload.get("email")
+            if email:
+                row = db.execute("SELECT id FROM leads WHERE email=?", (email,)).fetchone()
+                if row:
+                    lead_id = row["id"]
+        if not lead_id:
+            db.execute("UPDATE event_bus SET status='consumed', consumed_by=? WHERE id=?", (AGENT, ev["id"]))
+            db.commit()
             continue
         lead_row = db.execute("SELECT * FROM leads WHERE id=?", (lead_id,)).fetchone()
         if not lead_row:
+            db.execute("UPDATE event_bus SET status='consumed', consumed_by=? WHERE id=?", (AGENT, ev["id"]))
+            db.commit()
             continue
         lead = dict(lead_row)
         result = await qualify_lead(lead)
